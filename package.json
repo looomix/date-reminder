@@ -1,6 +1,6 @@
 {
   "name": "date-reminder",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Date Reminder — 订阅、生日与纪念日提醒（支持农历），可推到微信 / 企业微信 / QQ / 邮件 / Telegram",
   "main": "src/index.js",
   "type": "module",
@@ -33,7 +33,8 @@
     "qq",
     "telegram",
     "email",
-    "resend"
+    "resend",
+    "smtp"
   ],
   "license": "MIT"
 }

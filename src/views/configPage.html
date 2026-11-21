@@ -326,34 +326,93 @@
               </div>
               <div class="grow">
                 <div class="channel-name">邮件 <span class="badge badge-ok ch-state" id="state-email" style="margin-left:6px;">未配置</span></div>
-                <div class="channel-flow">发到邮箱，可抄送多人 · 支持 Resend / Brevo 两家</div>
+                <div class="channel-flow">发到邮箱，可抄送多人 · 可用自己的 QQ / 163 / Gmail，也可用 Resend / Brevo</div>
               </div>
               <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="email"><span class="track"></span></label>
               <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="channel-body">
               <div class="cfg-grid">
-                <label class="label">服务商</label>
+                <label class="label">怎么发信</label>
                 <div>
-                  <select class="select" id="emailProvider" style="max-width:260px;">
-                    <option value="resend">Resend（默认，注册简单）</option>
+                  <select class="select" id="emailProvider" style="max-width:320px;">
+                    <option value="smtp">用我自己的邮箱（QQ / 163 / 126 / Gmail）</option>
+                    <option value="resend">Resend（注册即用，不必有域名）</option>
                     <option value="brevo">Brevo（每天 300 封）</option>
                   </select>
-                  <div class="help">两家都只要一个 API Key，不用自己买域名。</div>
+                  <div class="help" id="emailProviderHelp">直接从 Cloudflare 连邮件服务器发信，不经过第三方，收件人看到的发件人就是你自己。</div>
                 </div>
+              </div>
 
-                <label class="label">API Key <span class="req">*</span></label>
-                <div class="secret-row">
-                  <input class="input" id="emailApiKey" placeholder="re_xxxxxxxxxxxx 或 xkeysib-xxxxxxxx" autocomplete="off">
-                  <button type="button" class="btn btn-sm clear-secret" data-key="EMAIL_API_KEY">清除</button>
+              <!-- ① SMTP 模式 -->
+              <div id="smtpOnly">
+                <div class="cfg-grid mt-16">
+                  <label class="label">常用邮箱</label>
+                  <div>
+                    <select class="select" id="smtpPreset" style="max-width:320px;">
+                      <option value="qq">QQ 邮箱 · smtp.qq.com:465</option>
+                      <option value="163">163 邮箱 · smtp.163.com:465</option>
+                      <option value="126">126 邮箱 · smtp.126.com:465</option>
+                      <option value="gmail">Gmail · smtp.gmail.com:465</option>
+                      <option value="outlook">Outlook / Hotmail · 587</option>
+                      <option value="exmail">腾讯企业邮箱 · 465</option>
+                      <option value="aliyun">阿里企业邮箱 · 465</option>
+                      <option value="custom">其它（自己填）</option>
+                    </select>
+                    <div class="help">选一个，下面三项自动填好。</div>
+                  </div>
+
+                  <label class="label">服务器 / 端口</label>
+                  <div class="flex gap-8 wrap">
+                    <input class="input" id="smtpHost" placeholder="smtp.qq.com" style="flex:1 1 150px;min-width:0;">
+                    <input class="input" id="smtpPort" placeholder="465" style="flex:0 0 80px;">
+                    <select class="select" id="smtpSecure" style="flex:0 0 136px;">
+                      <option value="on">SSL（465）</option>
+                      <option value="starttls">STARTTLS（587）</option>
+                      <option value="off">不加密</option>
+                    </select>
+                  </div>
+
+                  <label class="label">邮箱账号 <span class="req">*</span></label>
+                  <div>
+                    <input class="input" id="smtpUser" placeholder="yourname@qq.com" autocomplete="off">
+                  </div>
+
+                  <label class="label">授权码 <span class="req">*</span></label>
+                  <div class="secret-row">
+                    <input class="input" id="smtpPass" placeholder="不是登录密码，是邮箱设置里生成的授权码" autocomplete="off">
+                    <button type="button" class="btn btn-sm clear-secret" data-key="SMTP_PASS">清除</button>
+                  </div>
+
+                  <label class="label"></label>
+                  <div>
+                    <div class="help">
+                      <b>怎么拿授权码：</b>QQ 邮箱 → 设置 → 账号 → 开启 IMAP/SMTP → 生成授权码；163 / 126 → 设置 → POP3/SMTP/IMAP → 开启 → 新增授权码；
+                      Gmail → 开两步验证后生成「应用专用密码」。<b>填登录密码一定失败。</b>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <label class="label">发件邮箱 <span class="req">*</span></label>
-                <div>
-                  <input class="input" id="emailFrom" placeholder="onboarding@resend.dev">
-                  <div class="help">Resend 可先用 <b>onboarding@resend.dev</b> 发给你注册时那个邮箱；Brevo 需在后台「发件人」里先验证该邮箱。</div>
+              <!-- ② Resend / Brevo 模式 -->
+              <div id="apiOnly" style="display:none;">
+                <div class="cfg-grid mt-16">
+                  <label class="label">API Key <span class="req">*</span></label>
+                  <div class="secret-row">
+                    <input class="input" id="emailApiKey" placeholder="re_xxxxxxxxxxxx 或 xkeysib-xxxxxxxx" autocomplete="off">
+                    <button type="button" class="btn btn-sm clear-secret" data-key="EMAIL_API_KEY">清除</button>
+                  </div>
+
+                  <label class="label">发件邮箱 <span class="req">*</span></label>
+                  <div>
+                    <input class="input" id="emailFrom" placeholder="onboarding@resend.dev">
+                    <div class="help">Resend 可先用 <b>onboarding@resend.dev</b> 发给你注册时那个邮箱；Brevo 需在后台「发件人」里先验证该邮箱。</div>
+                  </div>
                 </div>
+              </div>
 
+              <!-- ③ 两种模式共用 -->
+              <div class="cfg-grid mt-16">
                 <label class="label">发件人名称</label>
                 <div>
                   <input class="input" id="emailFromName" placeholder="选填，例如 家庭提醒">
@@ -361,11 +420,18 @@
 
                 <label class="label">收件邮箱 <span class="req">*</span></label>
                 <div>
-                  <input class="input" id="emailTo" placeholder="me@example.com，多个用英文逗号分隔">
-                  <div class="help">可以用 QQ 邮箱、163、Gmail 等任意邮箱。</div>
+                  <input class="input" id="emailTo" placeholder="me@qq.com，多个用英文逗号分隔">
+                  <div class="help">收件人随便哪个邮箱都行：QQ、163、126、Gmail、Outlook、公司邮箱都可以。</div>
+                </div>
+
+                <label class="label">回复地址</label>
+                <div>
+                  <input class="input" id="emailReplyTo" placeholder="选填，例如你的常用邮箱">
+                  <div class="help">收到提醒后点「回复」，邮件会发到这个地址（只在用 Resend / Brevo 时有意义）。</div>
                 </div>
               </div>
-              <div class="flex between center mt-16">
+
+              <div class="flex between center mt-16 wrap gap-8">
                 <div class="xs muted">邮件里是排版好的 HTML，手机上直接可读。</div>
                 <button class="btn btn-sm" data-test="email">发送测试</button>
               </div>
@@ -572,6 +638,38 @@
     }
   }
 
+  // ── 邮件：三种发信方式切换 ──────────────────────────────────────────
+  var SMTP_PRESETS = {
+    qq: { host: 'smtp.qq.com', port: 465, secure: 'on' },
+    '163': { host: 'smtp.163.com', port: 465, secure: 'on' },
+    '126': { host: 'smtp.126.com', port: 465, secure: 'on' },
+    gmail: { host: 'smtp.gmail.com', port: 465, secure: 'on' },
+    outlook: { host: 'smtp-mail.outlook.com', port: 587, secure: 'starttls' },
+    exmail: { host: 'smtp.exmail.qq.com', port: 465, secure: 'on' },
+    aliyun: { host: 'smtp.mxhichina.com', port: 465, secure: 'on' }
+  };
+
+  function isSmtpMode() {
+    return $('emailProvider').value === 'smtp';
+  }
+
+  function syncEmailProvider() {
+    var smtp = isSmtpMode();
+    $('smtpOnly').style.display = smtp ? '' : 'none';
+    $('apiOnly').style.display = smtp ? 'none' : '';
+    $('emailProviderHelp').textContent = smtp
+      ? '直接从 Cloudflare 连邮件服务器发信，不经过第三方，收件人看到的发件人就是你自己。'
+      : '这两家是「网址发信」服务，注册后拿一个 API Key 就能用，不必自己搭服务器。';
+  }
+
+  function applySmtpPreset() {
+    var preset = SMTP_PRESETS[$('smtpPreset').value];
+    if (!preset) return; // 选「其它」时保留手填内容
+    $('smtpHost').value = preset.host;
+    $('smtpPort').value = String(preset.port);
+    $('smtpSecure').value = preset.secure;
+  }
+
   // ── 渲染配置 ────────────────────────────────────────────────────────
   function setSecretField(id, cfg, key, label) {
     var el = $(id);
@@ -588,7 +686,9 @@
       wechatbot: cfg.WECHATBOT_WEBHOOK_CONFIGURED,
       qq: cfg.QQ_ONEBOT_URL && cfg.QQ_TARGET_ID,
       telegram: cfg.TG_BOT_TOKEN_CONFIGURED && cfg.TG_CHAT_ID,
-      email: cfg.EMAIL_API_KEY_CONFIGURED && cfg.EMAIL_FROM && cfg.EMAIL_TO
+      email: cfg.EMAIL_PROVIDER === 'smtp'
+        ? (cfg.SMTP_PASS_CONFIGURED && cfg.SMTP_HOST && cfg.SMTP_USER && cfg.EMAIL_TO)
+        : (cfg.EMAIL_API_KEY_CONFIGURED && cfg.EMAIL_FROM && cfg.EMAIL_TO)
     };
     Object.keys(map).forEach(function (k) {
       var el = $('state-' + k);
@@ -642,11 +742,25 @@
     $('tgTopicId').value = cfg.TG_TOPIC_ID || '';
 
     // 邮件
-    $('emailProvider').value = cfg.EMAIL_PROVIDER === 'brevo' ? 'brevo' : 'resend';
+    var prov = ['smtp', 'brevo', 'resend'].indexOf(cfg.EMAIL_PROVIDER) >= 0 ? cfg.EMAIL_PROVIDER : 'resend';
+    $('emailProvider').value = prov;
     setSecretField('emailApiKey', cfg, 'EMAIL_API_KEY', 'API Key');
     $('emailFrom').value = cfg.EMAIL_FROM || '';
     $('emailFromName').value = cfg.EMAIL_FROM_NAME || '';
+    $('emailReplyTo').value = cfg.EMAIL_REPLY_TO || '';
     $('emailTo').value = cfg.EMAIL_TO || '';
+    $('smtpHost').value = cfg.SMTP_HOST || '';
+    $('smtpPort').value = cfg.SMTP_PORT ? String(cfg.SMTP_PORT) : '465';
+    $('smtpSecure').value = cfg.SMTP_SECURE || 'on';
+    $('smtpUser').value = cfg.SMTP_USER || '';
+    setSecretField('smtpPass', cfg, 'SMTP_PASS', '授权码');
+    // 已有自定义服务器时，预设下拉自动指向「其它」
+    var matchedPreset = 'custom';
+    Object.keys(SMTP_PRESETS).forEach(function (k) {
+      if (SMTP_PRESETS[k].host && SMTP_PRESETS[k].host === cfg.SMTP_HOST) matchedPreset = k;
+    });
+    $('smtpPreset').value = matchedPreset;
+    syncEmailProvider();
 
     // 策略
     var tzSelect = $('timezone');
@@ -725,7 +839,13 @@
       EMAIL_API_KEY: $('emailApiKey').value.trim(),
       EMAIL_FROM: $('emailFrom').value.trim(),
       EMAIL_FROM_NAME: $('emailFromName').value.trim(),
+      EMAIL_REPLY_TO: $('emailReplyTo').value.trim(),
       EMAIL_TO: $('emailTo').value.trim(),
+      SMTP_HOST: $('smtpHost').value.trim(),
+      SMTP_PORT: Number($('smtpPort').value) || 465,
+      SMTP_SECURE: $('smtpSecure').value,
+      SMTP_USER: $('smtpUser').value.trim(),
+      SMTP_PASS: $('smtpPass').value.trim(),
 
       TIMEZONE: $('timezone').value,
       NOTIFICATION_HOURS: state.hours,
@@ -802,9 +922,15 @@
     } else if (type === 'email') {
       body.EMAIL_PROVIDER = $('emailProvider').value;
       body.EMAIL_API_KEY = $('emailApiKey').value.trim();
-      body.EMAIL_FROM = $('emailFrom').value.trim();
+      body.EMAIL_FROM = $('emailFrom').value.trim() || $('smtpUser').value.trim();
       body.EMAIL_FROM_NAME = $('emailFromName').value.trim();
+      body.EMAIL_REPLY_TO = $('emailReplyTo').value.trim();
       body.EMAIL_TO = $('emailTo').value.trim();
+      body.SMTP_HOST = $('smtpHost').value.trim();
+      body.SMTP_PORT = Number($('smtpPort').value) || 465;
+      body.SMTP_SECURE = $('smtpSecure').value;
+      body.SMTP_USER = $('smtpUser').value.trim();
+      body.SMTP_PASS = $('smtpPass').value.trim();
     }
 
     try {
@@ -913,6 +1039,15 @@
 
   $('themeMode').addEventListener('change', function (e) {
     if (window.DR) window.DR.setTheme(e.target.value);
+  });
+
+  $('emailProvider').addEventListener('change', syncEmailProvider);
+  $('smtpPreset').addEventListener('change', applySmtpPreset);
+  $('smtpSecure').addEventListener('change', function () {
+    var v = $('smtpSecure').value;
+    // 选加密方式时顺手纠正端口，避免 465 配 STARTTLS 这种常见错配
+    if (v === 'on' && $('smtpPort').value === '587') $('smtpPort').value = '465';
+    if (v === 'starttls' && $('smtpPort').value === '465') $('smtpPort').value = '587';
   });
 
   $('btnExport').addEventListener('click', exportBackup);

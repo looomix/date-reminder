@@ -2,20 +2,30 @@
 /**
  * 邮件通知渠道
  *
- * Workers 里不能直接连 SMTP，所以走两家支持 HTTP 接口的服务商：
- *   - resend：https://resend.com   注册即可用，免费额度每天 100 封
- *   - brevo ：https://www.brevo.com 免费额度每天 300 封
- * 两家都只需要一个 API Key，发件邮箱可以在后台直接填（不必自己买域名）。
+ * 三种发信方式，任选其一：
+ *   1. smtp     用自己的邮箱直连发信（QQ / 163 / 126 / Gmail / 企业邮箱）
+ *               Workers 支持 TCP socket，所以能直连 smtp.qq.com:465
+ *   2. resend   https://resend.com   注册即用，免费额度每天 100 封
+ *   3. brevo    https://www.brevo.com 免费额度每天 300 封
+ *
+ * 无论用哪种方式，收件邮箱都可以是任意邮箱（QQ、Gmail、126、Outlook…）。
  *
  * 配置字段：
- *   EMAIL_PROVIDER   resend | brevo
- *   EMAIL_API_KEY    API Key
- *   EMAIL_FROM       发件邮箱（需在服务商后台验证过）
+ *   EMAIL_PROVIDER   smtp | resend | brevo
+ *   EMAIL_API_KEY    resend / brevo 的 API Key
+ *   SMTP_HOST        服务器地址（smtp.qq.com 等）
+ *   SMTP_PORT        端口（465 / 587）
+ *   SMTP_SECURE      on（465 隐式 TLS）| starttls（587）| off
+ *   SMTP_USER        邮箱账号
+ *   SMTP_PASS        授权码（不是登录密码）
+ *   EMAIL_FROM       发件邮箱
  *   EMAIL_FROM_NAME  发件人显示名（可选）
+ *   EMAIL_REPLY_TO   回复地址（可选，填你自己的常用邮箱）
  *   EMAIL_TO         收件邮箱，多个用英文逗号分隔
  */
 import { ok, fail, errorMessage, stripMarkdown } from './channel.js';
 import { formatLocalDate } from '../../core/time.js';
+import { sendViaSmtp } from './smtp.js';
 
 /**
  * 把收件人字符串拆成数组。
@@ -65,6 +75,7 @@ function buildRequest(config, title, content) {
   const provider = String(config.EMAIL_PROVIDER || 'resend').toLowerCase();
   const from = String(config.EMAIL_FROM || '').trim();
   const fromName = String(config.EMAIL_FROM_NAME || '').trim();
+  const replyTo = String(config.EMAIL_REPLY_TO || '').trim();
   const to = parseRecipients(config.EMAIL_TO);
   const text = stripMarkdown(content);
 
@@ -80,7 +91,8 @@ function buildRequest(config, title, content) {
         to: to.map((email) => ({ email })),
         subject: title,
         htmlContent: buildHtml(title, content, config.TIMEZONE),
-        textContent: text
+        textContent: text,
+        ...(replyTo ? { replyTo: { email: replyTo } } : {})
       })
     };
   }
@@ -97,7 +109,8 @@ function buildRequest(config, title, content) {
       to,
       subject: title,
       html: buildHtml(title, content, config.TIMEZONE),
-      text
+      text,
+      ...(replyTo ? { reply_to: replyTo } : {})
     })
   };
 }
@@ -107,8 +120,17 @@ export const emailChannel = {
   name: 'email',
 
   validateConfig(config) {
-    if (!config.EMAIL_API_KEY) return { ok: false, error: '缺少 EMAIL_API_KEY' };
-    if (!config.EMAIL_FROM) return { ok: false, error: '缺少 EMAIL_FROM（发件邮箱）' };
+    const provider = String(config.EMAIL_PROVIDER || 'resend').toLowerCase();
+
+    if (provider === 'smtp') {
+      if (!config.SMTP_HOST) return { ok: false, error: '缺少 SMTP 服务器地址' };
+      if (!config.SMTP_USER) return { ok: false, error: '缺少 SMTP 账号（你的邮箱地址）' };
+      if (!config.SMTP_PASS) return { ok: false, error: '缺少 SMTP 授权码' };
+    } else if (!config.EMAIL_API_KEY) {
+      return { ok: false, error: '缺少 EMAIL_API_KEY' };
+    }
+
+    if (!config.EMAIL_FROM && provider !== 'smtp') return { ok: false, error: '缺少 EMAIL_FROM（发件邮箱）' };
     if (!config.EMAIL_TO) return { ok: false, error: '缺少 EMAIL_TO（收件邮箱）' };
     if (parseRecipients(config.EMAIL_TO).length === 0) return { ok: false, error: '收件邮箱格式不正确' };
     return { ok: true };
@@ -119,6 +141,15 @@ export const emailChannel = {
     if (!v.ok) return fail('email', v.error || '配置无效');
 
     const title = payload.title || 'Date Reminder 提醒';
+
+    // 用自己的邮箱直连发信
+    if (String(config.EMAIL_PROVIDER || '').toLowerCase() === 'smtp') {
+      return sendViaSmtp(
+        { title, content: payload.content || '', html: buildHtml(title, payload.content || '', config.TIMEZONE) },
+        config
+      );
+    }
+
     const { url, headers, body } = buildRequest(config, title, payload.content || '');
 
     try {

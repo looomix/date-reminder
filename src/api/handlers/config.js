@@ -16,6 +16,7 @@ const SECRET_FIELDS = [
   'QQ_ONEBOT_TOKEN',
   'TG_BOT_TOKEN',
   'EMAIL_API_KEY',
+  'SMTP_PASS',
   'THIRD_PARTY_API_TOKEN'
 ];
 
@@ -118,11 +119,23 @@ async function handleUpdateConfig(request, env) {
       TG_CHAT_ID: (newConfig.TG_CHAT_ID != null ? String(newConfig.TG_CHAT_ID) : '').trim(),
       TG_TOPIC_ID: (newConfig.TG_TOPIC_ID != null ? String(newConfig.TG_TOPIC_ID) : '').trim(),
 
-      EMAIL_PROVIDER: newConfig.EMAIL_PROVIDER === 'brevo' ? 'brevo' : 'resend',
+      EMAIL_PROVIDER: ['smtp', 'brevo', 'resend'].includes(String(newConfig.EMAIL_PROVIDER || '').toLowerCase())
+        ? String(newConfig.EMAIL_PROVIDER).toLowerCase()
+        : 'resend',
       EMAIL_API_KEY: mergeSecretField(config, newConfig, 'EMAIL_API_KEY', clearSecretFields),
       EMAIL_FROM: (newConfig.EMAIL_FROM || '').trim(),
       EMAIL_FROM_NAME: (newConfig.EMAIL_FROM_NAME || '').trim(),
+      EMAIL_REPLY_TO: (newConfig.EMAIL_REPLY_TO || '').trim(),
       EMAIL_TO: (newConfig.EMAIL_TO || '').trim(),
+      SMTP_HOST: (newConfig.SMTP_HOST || '').trim(),
+      SMTP_PORT: Number.isFinite(Number(newConfig.SMTP_PORT)) && Number(newConfig.SMTP_PORT) > 0
+        ? Math.floor(Number(newConfig.SMTP_PORT))
+        : 465,
+      SMTP_SECURE: ['on', 'off', 'starttls'].includes(String(newConfig.SMTP_SECURE || ''))
+        ? String(newConfig.SMTP_SECURE)
+        : 'on',
+      SMTP_USER: (newConfig.SMTP_USER || '').trim(),
+      SMTP_PASS: mergeSecretField(config, newConfig, 'SMTP_PASS', clearSecretFields),
 
       THIRD_PARTY_API_TOKEN: mergeSecretField(config, newConfig, 'THIRD_PARTY_API_TOKEN', clearSecretFields),
       DEBUG_LOGS: newConfig.DEBUG_LOGS === true,

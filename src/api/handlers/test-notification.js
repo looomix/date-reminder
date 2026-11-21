@@ -134,13 +134,25 @@ async function handleTestNotification(request, env) {
         ? 'Telegram 消息发送成功'
         : '发送失败：' + (tgResult.error || '请检查 Bot Token 与 Chat ID');
     } else if (type === 'email') {
+      const provider = ['smtp', 'brevo', 'resend'].includes(String(body.EMAIL_PROVIDER || '').toLowerCase())
+        ? String(body.EMAIL_PROVIDER).toLowerCase()
+        : (config.EMAIL_PROVIDER || 'resend');
+      const rawPort = body.SMTP_PORT != null ? Number(body.SMTP_PORT) : Number(config.SMTP_PORT);
       testConfig = {
         ...config,
-        EMAIL_PROVIDER: body.EMAIL_PROVIDER === 'brevo' ? 'brevo' : (config.EMAIL_PROVIDER || 'resend'),
+        EMAIL_PROVIDER: provider,
         EMAIL_API_KEY: pick(body, config, 'EMAIL_API_KEY'),
-        EMAIL_FROM: pick(body, config, 'EMAIL_FROM'),
+        EMAIL_FROM: pick(body, config, 'EMAIL_FROM') || (provider === 'smtp' ? pick(body, config, 'SMTP_USER') : ''),
         EMAIL_FROM_NAME: typeof body.EMAIL_FROM_NAME === 'string' ? body.EMAIL_FROM_NAME.trim() : config.EMAIL_FROM_NAME,
-        EMAIL_TO: pick(body, config, 'EMAIL_TO')
+        EMAIL_REPLY_TO: typeof body.EMAIL_REPLY_TO === 'string' ? body.EMAIL_REPLY_TO.trim() : config.EMAIL_REPLY_TO,
+        EMAIL_TO: pick(body, config, 'EMAIL_TO'),
+        SMTP_HOST: pick(body, config, 'SMTP_HOST'),
+        SMTP_PORT: Number.isFinite(rawPort) && rawPort > 0 ? Math.floor(rawPort) : 465,
+        SMTP_SECURE: typeof body.SMTP_SECURE === 'string' && body.SMTP_SECURE
+          ? body.SMTP_SECURE
+          : (config.SMTP_SECURE || 'on'),
+        SMTP_USER: pick(body, config, 'SMTP_USER'),
+        SMTP_PASS: pick(body, config, 'SMTP_PASS')
       };
       const mailResult = await emailChannel.send(
         {

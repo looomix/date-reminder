@@ -50,12 +50,18 @@ const DEFAULT_CONFIG = {
   TG_CHAT_ID: '',
   TG_TOPIC_ID: '',
 
-  // ⑥ 邮件（Resend / Brevo）
-  EMAIL_PROVIDER: 'resend',
+  // ⑥ 邮件（自己的邮箱 SMTP / Resend / Brevo）
+  EMAIL_PROVIDER: 'smtp',
   EMAIL_API_KEY: '',
   EMAIL_FROM: '',
   EMAIL_FROM_NAME: '',
+  EMAIL_REPLY_TO: '',
   EMAIL_TO: '',
+  SMTP_HOST: '',
+  SMTP_PORT: 465,
+  SMTP_SECURE: 'on',
+  SMTP_USER: '',
+  SMTP_PASS: '',
 
   // 其它
   THIRD_PARTY_API_TOKEN: '',

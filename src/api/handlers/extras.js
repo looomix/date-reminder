@@ -27,7 +27,7 @@ import { nextBirthdaySolarDate } from '../../core/birthday.js';
 import { getConfig } from '../../data/config.js';
 import { getTimezoneDateParts } from '../../core/time.js';
 
-export const VERSION = '4.1.0';
+export const VERSION = '4.2.0';
 
 /** 标准 JSON 响应 */
 function json(data, status = 200) {
