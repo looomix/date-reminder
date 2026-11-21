@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>提醒清单 · Date Reminder</title>
+  ${themeResources}
+  <style>
+    .cell-name { display: flex; flex-direction: column; gap: 3px; }
+    .cell-name .title { color: var(--text); font-weight: 500; font-size: 13.5px; }
+    .cell-name .meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .date-main { color: var(--text); font-weight: 500; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .date-sub { font-size: 11.5px; color: var(--text-3); }
+    .icon-btn {
+      width: 28px; height: 28px; padding: 0;
+      display: inline-grid; place-items: center;
+      border: 1px solid transparent; background: transparent;
+      border-radius: var(--r-xs); color: var(--text-3); cursor: pointer;
+      transition: all .15s;
+    }
+    .icon-btn:hover { background: var(--surface-3); color: var(--text); }
+    .icon-btn.danger:hover { background: var(--danger-bg); color: var(--danger); }
+    .icon-btn svg { width: 15px; height: 15px; }
+    .quick-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      border: 1px solid var(--border-strong); background: var(--surface);
+      color: var(--text-2); border-radius: 999px;
+      padding: 3px 10px; font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    .chip:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+    .preview-box {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: var(--r);
+      background: var(--brand-soft); border: 1px solid var(--brand-border);
+      color: var(--brand); font-size: 12.5px;
+    }
+    .preview-box svg { width: 15px; height: 15px; flex: 0 0 auto; }
+    .win-range { display: inline-flex; align-items: center; gap: 4px; }
+    .win-range .select { width: 68px; }
+    .select-plain { min-width: 110px; }
+    #ruleList .rule-row .select, #ruleList .rule-row .input { background: var(--surface); }
+    .empty-cta { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Date Reminder</div>
+        <div class="brand-sub">提醒管理</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">工作台</div>
+      <a class="nav-item active" href="/admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>提醒清单</span>
+      </a>
+      <a class="nav-item" href="/admin/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>总览</span>
+      </a>
+      <a class="nav-item" href="/admin/notify-logs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span>通知记录</span>
+      </a>
+      <div class="nav-label">设置</div>
+      <a class="nav-item" href="/admin/config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 008.9 19a1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 005 8.9a1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span>系统设置</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="user-avatar">A</div>
+        <div class="user-name grow truncate" id="userName">管理员</div>
+        <a class="link-quiet" href="/api/logout" title="退出登录">退出</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>提醒清单</h1>
+        <div class="sub">订阅、生日、纪念日，集中管理并按时推送</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn" id="btnNewBirthday">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a4 4 0 00-4-4H8a4 4 0 00-4 4v8"/><path d="M12 9V3"/><path d="M8 6l4-3 4 3"/></svg>
+          添加生日
+        </button>
+        <button class="btn btn-primary" id="btnNew">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          新建提醒
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 概览 -->
+      <div class="stat-grid" id="statGrid">
+        <div class="stat"><div class="label">全部提醒</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">进行中</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">7 天内到期</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">已停用</div><div class="value">—</div></div>
+      </div>
+
+      <!-- 列表 -->
+      <div class="card mt-16">
+        <div class="card-head" style="flex-wrap:wrap; gap:10px;">
+          <div class="flex gap-8 wrap grow">
+            <input class="input input-sm" id="searchInput" placeholder="搜索名称、分类或备注" style="width:230px;">
+            <select class="select input-sm" id="typeFilter" style="width:132px;">
+              <option value="">全部类型</option>
+              <option value="subscription">订阅 / 会员</option>
+              <option value="birthday">生日</option>
+              <option value="anniversary">纪念日</option>
+            </select>
+            <select class="select input-sm" id="statusFilter" style="width:118px;">
+              <option value="">全部状态</option>
+              <option value="active">进行中</option>
+              <option value="paused">已停用</option>
+              <option value="expiring">7 天内到期</option>
+            </select>
+          </div>
+          <div class="xs muted nowrap" id="listCount"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table responsive">
+            <thead>
+              <tr>
+                <th style="min-width:180px;">名称</th>
+                <th style="width:150px;">下次提醒日期</th>
+                <th style="width:110px;">剩余</th>
+                <th style="width:120px;">金额</th>
+                <th style="min-width:170px;">提醒规则</th>
+                <th style="width:78px;">状态</th>
+                <th style="width:150px;" class="right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+          </table>
+
+          <div id="emptyState" class="empty hidden">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <h4>还没有任何提醒</h4>
+            <div class="small">先添加一个生日或一条订阅，到时间系统会自动推送给你。</div>
+            <div class="empty-cta">
+              <button class="btn btn-sm" id="emptyAddBirthday">添加生日</button>
+              <button class="btn btn-sm btn-primary" id="emptyAddSub">新建提醒</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 新建 / 编辑 弹窗 ══ -->
+<div class="modal-mask" id="formModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <h3 id="formTitle">新建提醒</h3>
+        <div class="desc" id="formDesc">填写后保存，系统会按规则定时推送</div>
+      </div>
+      <button class="icon-btn" id="formClose" title="关闭" style="margin-top:-2px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- 基本信息 -->
+      <div class="form-section" style="margin-top:0;">
+        <div class="form-section-title">基本信息</div>
+
+        <div class="field mb-16">
+          <label class="label">事件类型</label>
+          <div class="segmented" id="eventTypeSeg">
+            <button type="button" data-type="subscription" class="active">订阅 / 会员</button>
+            <button type="button" data-type="birthday">生日</button>
+            <button type="button" data-type="anniversary">纪念日</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="fName">名称 <span class="req">*</span></label>
+            <input class="input" id="fName" placeholder="例如：奶奶生日 / Netflix 会员" maxlength="40">
+            <div class="error-text" id="fNameErr"></div>
+          </div>
+          <div class="field">
+            <label class="label" for="fCategory">分类 <span class="hint">选填</span></label>
+            <input class="input" id="fCategory" list="categoryList" placeholder="例如：家人 / 影音娱乐">
+            <datalist id="categoryList"></datalist>
+          </div>
+        </div>
+
+        <div class="field mt-12">
+          <label class="label" for="fNotes">备注 <span class="hint">选填</span></label>
+          <textarea class="textarea" id="fNotes" placeholder="例如：记得提前买蛋糕 / 自动续费在月初扣款" maxlength="300"></textarea>
+        </div>
+      </div>
+
+      <!-- 订阅专属：日期与周期 -->
+      <div class="form-section" id="secSubscription">
+        <div class="form-section-title">日期与周期</div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="fStart">开始日期 <span class="hint">选填</span></label>
+            <input class="input" type="date" id="fStart">
+          </div>
+          <div class="field">
+            <label class="label" for="fExpiry">到期日期 <span class="req">*</span></label>
+            <input class="input" type="date" id="fExpiry">
+            <div class="error-text" id="fExpiryErr"></div>
+          </div>
+        </div>
+
+        <div class="grid-2 mt-12">
+          <div class="field">
+            <label class="label">续费周期</label>
+            <div class="flex gap-8">
+              <input class="input" type="number" id="fPeriodValue" min="1" max="120" value="1" style="width:88px;">
+              <select class="select" id="fPeriodUnit">
+                <option value="month">个月</option>
+                <option value="year">年</option>
+                <option value="day">天</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">订阅模式</label>
+            <select class="select" id="fMode">
+              <option value="cycle">循环订阅（到期后从原日期顺延）</option>
+              <option value="reset">到期重置（从续费日重新计时）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2 mt-12">
+          <div class="field">
+            <label class="label">费用 <span class="hint">选填</span></label>
+            <div class="flex gap-8">
+              <input class="input" type="number" id="fAmount" min="0" step="0.01" placeholder="0.00" style="flex:1 1 auto;">
+              <select class="select" id="fCurrency" style="width:92px;">
+                <option value="CNY">CNY</option>
+                <option value="USD">USD</option>
+                <option value="HKD">HKD</option>
+                <option value="EUR">EUR</option>
+                <option value="JPY">JPY</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">日历选项</label>
+            <div class="flex gap-16 wrap" style="padding-top:7px;">
+              <label class="switch">
+                <input type="checkbox" id="fCycleLunar"><span class="track"></span>
+                <span class="switch-text">按农历周期续费</span>
+              </label>
+              <label class="switch">
+                <input type="checkbox" id="fEndOfMonth"><span class="track"></span>
+                <span class="switch-text">按月末对齐</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 生日专属 -->
+      <div class="form-section hidden" id="secBirthday">
+        <div class="form-section-title">生日信息</div>
+
+        <div class="field mb-12">
+          <label class="label">历法</label>
+          <div class="segmented" id="calendarSeg">
+            <button type="button" data-cal="solar" class="active">公历</button>
+            <button type="button" data-cal="lunar">农历</button>
+          </div>
+          <div class="help">很多长辈习惯过农历生日。选农历后按月、日填写（正月 = 1，腊月 = 12），年份可不填。</div>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label class="label" for="fBirthMonth">月份 <span class="req">*</span></label>
+            <select class="select" id="fBirthMonth"></select>
+          </div>
+          <div class="field">
+            <label class="label" for="fBirthDay">日期 <span class="req">*</span></label>
+            <select class="select" id="fBirthDay"></select>
+          </div>
+          <div class="field">
+            <label class="label" for="fBirthYear">出生年份 <span class="hint">选填</span></label>
+            <input class="input" type="number" id="fBirthYear" min="1900" max="2100" placeholder="例如：1958">
+          </div>
+        </div>
+
+        <div class="preview-box mt-12" id="birthPreview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span id="birthPreviewText">选择月份和日期后，这里会显示下一次对应的公历日期</span>
+        </div>
+      </div>
+
+      <!-- 提醒规则 -->
+      <div class="form-section">
+        <div class="form-section-title">
+          <span>提醒规则</span>
+          <span class="xs muted" style="text-transform:none;letter-spacing:0;">可添加多条</span>
+        </div>
+
+        <div class="rule-list" id="ruleList"></div>
+
+        <div class="flex gap-8 wrap mt-12">
+          <button type="button" class="btn btn-sm" id="btnAddRule">+ 添加规则</button>
+          <button type="button" class="btn btn-sm" id="btnPresetSub">默认预设（7/3/1 天 + 当天）</button>
+          <button type="button" class="btn btn-sm" id="btnPresetBirth">生日预设（2 天 / 1 天 / 当天上午）</button>
+        </div>
+
+        <div class="callout info mt-12">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div>
+            「提前 N 天」表示剩余天数<b>正好等于 N</b> 的那一天发一次，不会每天连发。
+            「限定时间段」表示只在该时段的整点发送、且当天只发一次；不选则按系统设置的发送时段。
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label class="switch">
+          <input type="checkbox" id="fActive" checked><span class="track"></span>
+          <span class="switch-text">启用这条提醒</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn" id="formCancel">取消</button>
+      <button class="btn btn-primary" id="formSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 账单记录弹窗 ══ -->
+<div class="modal-mask" id="payModal">
+  <div class="modal narrow" style="max-width:620px;">
+    <div class="modal-head">
+      <div>
+        <h3>缴费记录</h3>
+        <div class="desc" id="paySubName"></div>
+      </div>
+      <button class="icon-btn" id="payClose" title="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="max-height:60vh;">
+      <div class="table-wrap">
+        <table class="table responsive">
+          <thead><tr><th>日期</th><th>金额</th><th>说明</th><th style="width:60px;"></th></tr></thead>
+          <tbody id="payBody"></tbody>
+        </table>
+      </div>
+      <div id="payEmpty" class="empty hidden" style="padding:32px 0;">
+        <h4>暂无缴费记录</h4>
+        <div class="small">首次续订后会自动生成记录</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="payDone">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   Date Reminder · 提醒清单页
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var ICON = {
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+    renew: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0114.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0020.5 15"/></svg>',
+    receipt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2V2l-3 2-3-2-3 2-3-2z"/><path d="M8 9h8M8 13h5"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+  };
+
+  var LUNAR_MONTHS = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '冬月', '腊月'];
+  var SOLAR_MONTHS = ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月', '7 月', '8 月', '9 月', '10 月', '11 月', '12 月'];
+  var UNIT_LABEL = { CNY: '¥', USD: '$', HKD: 'HK$', EUR: '€', JPY: 'JP¥', GBP: '£' };
+
+  var state = {
+    subs: [],
+    config: {},
+    timezone: 'Asia/Shanghai',
+    editingId: null,
+    eventType: 'subscription',
+    calendar: 'solar',
+    rules: [],
+    paySubId: null,
+    filter: { q: '', type: '', status: '' }
+  };
+
+  // ── 基础工具 ────────────────────────────────────────────────────────
+  function $(id) { return document.getElementById(id); }
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  async function api(method, url, body) {
+    var opts = { method: method, credentials: 'same-origin', headers: {} };
+    if (body !== undefined) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    var res = await fetch(url, opts);
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 401) { window.location.href = '/'; throw new Error('登录已过期'); }
+    if (!res.ok) throw new Error((data && data.message) || ('请求失败（' + res.status + '）'));
+    return data;
+  }
+
+  function toast(message, kind) {
+    var host = $('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (kind || 'info');
+    el.textContent = message;
+    host.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .2s';
+      setTimeout(function () { el.remove(); }, 220);
+    }, 3000);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    var parts = tzParts(d);
+    return parts.year + '-' + pad(parts.month) + '-' + pad(parts.day);
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function tzParts(date) {
+    try {
+      var fmt = new Intl.DateTimeFormat('en-CA', {
+        timeZone: state.timezone, year: 'numeric', month: '2-digit', day: '2-digit'
+      });
+      var out = {};
+      fmt.formatToParts(date).forEach(function (p) {
+        if (p.type === 'year') out.year = Number(p.value);
+        if (p.type === 'month') out.month = Number(p.value);
+        if (p.type === 'day') out.day = Number(p.value);
+      });
+      return out;
+    } catch (e) {
+      return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
+    }
+  }
+
+  function daysLeft(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    var target = tzParts(d);
+    var today = tzParts(new Date());
+    var a = Date.UTC(target.year, target.month - 1, target.day);
+    var b = Date.UTC(today.year, today.month - 1, today.day);
+    return Math.round((a - b) / 86400000);
+  }
+
+  function typeLabel(t) {
+    return t === 'birthday' ? '生日' : t === 'anniversary' ? '纪念日' : '订阅';
+  }
+
+  function typeBadgeClass(t) {
+    return t === 'birthday' ? 'badge-danger' : t === 'anniversary' ? 'badge-warn' : 'badge-neutral';
+  }
+
+  function daysBadge(days) {
+    if (days === null) return '<span class="badge badge-neutral">—</span>';
+    if (days < 0) return '<span class="badge badge-danger"><span class="dot"></span>已过 ' + Math.abs(days) + ' 天</span>';
+    if (days === 0) return '<span class="badge badge-danger"><span class="dot"></span>今天</span>';
+    if (days <= 7) return '<span class="badge badge-warn"><span class="dot"></span>' + days + ' 天</span>';
+    if (days <= 30) return '<span class="badge badge-info">' + days + ' 天</span>';
+    return '<span class="badge badge-neutral">' + days + ' 天</span>';
+  }
+
+  function money(sub) {
+    if (sub.amount == null || sub.amount === '') return '<span class="muted">—</span>';
+    var sym = UNIT_LABEL[sub.currency || 'CNY'] || '';
+    var period = sub.periodUnit === 'year' ? '/年' : sub.periodUnit === 'day' ? '/天' : '/月';
+    return '<span class="nowrap">' + esc(sym) + esc(Number(sub.amount).toLocaleString('zh-CN')) +
+      '<span class="xs muted">' + period + '</span></span>';
+  }
+
+  // ── 数据加载 ────────────────────────────────────────────────────────
+  async function loadAll() {
+    try {
+      var results = await Promise.all([api('GET', '/api/subscriptions'), api('GET', '/api/config')]);
+      state.subs = Array.isArray(results[0]) ? results[0] : [];
+      state.config = results[1] || {};
+      state.timezone = state.config.TIMEZONE || 'Asia/Shanghai';
+      if (state.config.ADMIN_USERNAME) {
+        $('userName').textContent = state.config.ADMIN_USERNAME;
+      }
+      renderStats();
+      renderList();
+      loadCategories();
+    } catch (err) {
+      toast(err.message || '加载失败', 'err');
+    }
+  }
+
+  async function loadCategories() {
+    try {
+      var r = await api('GET', '/api/categories');
+      var list = (r && r.categories) || [];
+      $('categoryList').innerHTML = list.map(function (c) {
+        return '<option value="' + esc(c) + '"></option>';
+      }).join('');
+    } catch (e) { /* 忽略 */ }
+  }
+
+  function renderStats() {
+    var active = state.subs.filter(function (s) { return s.isActive; });
+    var soon = active.filter(function (s) {
+      var d = daysLeft(s.expiryDate);
+      return d !== null && d >= 0 && d <= 7;
+    });
+    var paused = state.subs.filter(function (s) { return !s.isActive; }).length;
+    var cells = [
+      { label: '全部提醒', value: state.subs.length, foot: '含已停用' },
+      { label: '进行中', value: active.length, foot: '正常推送中' },
+      { label: '7 天内到期', value: soon.length, foot: soon.length ? '需要留意' : '暂无临近事项' },
+      { label: '已停用', value: paused, foot: paused ? '不再推送' : '全部启用中' }
+    ];
+    $('statGrid').innerHTML = cells.map(function (c, i) {
+      var accent = i === 2 && c.value > 0 ? ' accent' : '';
+      return '<div class="stat' + accent + '">' +
+        '<div class="label">' + c.label + '</div>' +
+        '<div class="value">' + c.value + '<span class="unit">条</span></div>' +
+        '<div class="foot">' + c.foot + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function filtered() {
+    var q = state.filter.q.trim().toLowerCase();
+    var list = state.subs.filter(function (s) {
+      if (state.filter.type && (s.eventType || 'subscription') !== state.filter.type) return false;
+      if (state.filter.status === 'active' && !s.isActive) return false;
+      if (state.filter.status === 'paused' && s.isActive) return false;
+      if (state.filter.status === 'expiring') {
+        var d = daysLeft(s.expiryDate);
+        if (!s.isActive || d === null || d < 0 || d > 7) return false;
+      }
+      if (q) {
+        var hay = [s.name, s.category, s.notes, s.customType].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    return list.sort(function (a, b) {
+      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+      return (daysLeft(a.expiryDate) || 0) - (daysLeft(b.expiryDate) || 0);
+    });
+  }
+
+  function renderList() {
+    var list = filtered();
+    $('listCount').textContent = '共 ' + list.length + ' 条';
+    var body = $('listBody');
+    var empty = $('emptyState');
+
+    if (list.length === 0) {
+      body.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    body.innerHTML = list.map(function (s) {
+      var days = daysLeft(s.expiryDate);
+      var isEvent = s.eventType === 'birthday' || s.eventType === 'anniversary';
+      var metaBadges = '<span class="badge ' + typeBadgeClass(s.eventType || 'subscription') + '">' + typeLabel(s.eventType || 'subscription') + '</span>';
+      if (s.useLunar) metaBadges += '<span class="badge badge-brand">农历</span>';
+      if (s.category) metaBadges += '<span class="badge badge-neutral">' + esc(s.category) + '</span>';
+
+      var lunarText = s.expiryLunarText
+        ? '<div class="date-sub">农历 ' + esc(s.expiryLunarText) + '</div>'
+        : '';
+
+      var actions = '<button class="icon-btn" data-act="edit" data-id="' + esc(s.id) + '" title="编辑">' + ICON.edit + '</button>' +
+        '<button class="icon-btn" data-act="test" data-id="' + esc(s.id) + '" title="发送测试">' + ICON.send + '</button>';
+
+      if (!isEvent) {
+        actions += '<button class="icon-btn" data-act="renew" data-id="' + esc(s.id) + '" title="续订">' + ICON.renew + '</button>';
+      }
+      if ((s.paymentHistory || []).length > 0) {
+        actions += '<button class="icon-btn" data-act="pay" data-id="' + esc(s.id) + '" title="缴费记录">' + ICON.receipt + '</button>';
+      }
+      actions += '<button class="icon-btn danger" data-act="del" data-id="' + esc(s.id) + '" title="删除">' + ICON.trash + '</button>';
+
+      return '<tr data-row="' + esc(s.id) + '">' +
+        '<td data-label="名称"><div class="cell-name"><div class="title">' + esc(s.name) + '</div><div class="meta">' + metaBadges + '</div></div></td>' +
+        '<td data-label="日期"><div class="date-main">' + fmtDate(s.expiryDate) + '</div>' + lunarText + '</td>' +
+        '<td data-label="剩余">' + daysBadge(days) + '</td>' +
+        '<td data-label="金额">' + money(s) + '</td>' +
+        '<td data-label="提醒"><span class="xs text-2">' + esc(s.reminderRulesSummary || '未设置提醒') + '</span></td>' +
+        '<td data-label="状态"><label class="switch" title="启用 / 停用"><input type="checkbox" data-act="toggle" data-id="' + esc(s.id) + '"' + (s.isActive ? ' checked' : '') + '><span class="track"></span></label></td>' +
+        '<td data-label="操作"><div class="actions">' + actions + '</div></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // ── 表单：事件类型 / 历法 ────────────────────────────────────────────
+  function setEventType(type) {
+    state.eventType = type;
+    Array.prototype.forEach.call($('eventTypeSeg').children, function (b) {
+      b.classList.toggle('active', b.getAttribute('data-type') === type);
+    });
+    var isSub = type === 'subscription';
+    $('secSubscription').classList.toggle('hidden', !isSub);
+    $('secBirthday').classList.toggle('hidden', isSub);
+    $('btnPresetBirth').style.display = isSub ? 'none' : '';
+    $('fName').placeholder = isSub ? '例如：Netflix 会员' : (type === 'birthday' ? '例如：奶奶生日' : '例如：结婚纪念日');
+    if (!isSub) updateBirthPreview();
+  }
+
+  function setCalendar(cal) {
+    state.calendar = cal;
+    Array.prototype.forEach.call($('calendarSeg').children, function (b) {
+      b.classList.toggle('active', b.getAttribute('data-cal') === cal);
+    });
+    fillMonthDayOptions();
+    updateBirthPreview();
+  }
+
+  function fillMonthDayOptions() {
+    var lunar = state.calendar === 'lunar';
+    var monthSel = $('fBirthMonth');
+    var daySel = $('fBirthDay');
+    var keepMonth = Number(monthSel.value) || 1;
+    var keepDay = Number(daySel.value) || 1;
+
+    monthSel.innerHTML = (lunar ? LUNAR_MONTHS : SOLAR_MONTHS).map(function (label, i) {
+      return '<option value="' + (i + 1) + '"' + (i + 1 === keepMonth ? ' selected' : '') + '>' + label + '</option>';
+    }).join('');
+
+    var maxDay = 31;
+    if (lunar) {
+      maxDay = 30;
+    } else {
+      var m = Number(monthSel.value) || 1;
+      maxDay = new Date(Date.UTC(2024, m, 0)).getUTCDate();
+    }
+    if (keepDay > maxDay) keepDay = maxDay;
+
+    var opts = [];
+    for (var i = 1; i <= maxDay; i++) {
+      opts.push('<option value="' + i + '"' + (i === keepDay ? ' selected' : '') + '>' + i + ' 日</option>');
+    }
+    daySel.innerHTML = opts.join('');
+  }
+
+  var previewTimer = null;
+  function updateBirthPreview() {
+    if (state.eventType === 'subscription') return;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(async function () {
+      var month = Number($('fBirthMonth').value);
+      var day = Number($('fBirthDay').value);
+      var lunar = state.calendar === 'lunar';
+      var textEl = $('birthPreviewText');
+      if (!month || !day) { textEl.textContent = '选择月份和日期后，这里会显示下一次对应的公历日期'; return; }
+      textEl.textContent = '正在计算…';
+      try {
+        var r = await api('GET', '/api/lunar/next?month=' + month + '&day=' + day + '&lunar=' + (lunar ? 1 : 0));
+        var prefix = lunar ? ('农历' + LUNAR_MONTHS[month - 1] + day + ' 日') : ('每年 ' + month + ' 月 ' + day + ' 日');
+        var when = r.daysAway === 0 ? '就是今天' : (r.daysAway === 1 ? '明天' : r.daysAway + ' 天后');
+        textEl.innerHTML = prefix + ' → 下次公历 <b>' + esc(r.date) + '</b>' +
+          (r.lunarText ? '（农历' + esc(r.lunarText) + '）' : '') + '，' + when;
+      } catch (err) {
+        textEl.textContent = err.message || '无法推算该日期';
+      }
+    }, 220);
+  }
+
+  // ── 规则编辑器 ──────────────────────────────────────────────────────
+  function hourOptions(selected) {
+    var out = [];
+    for (var h = 0; h < 24; h++) {
+      var v = pad(h);
+      out.push('<option value="' + v + '"' + (v === selected ? ' selected' : '') + '>' + v + ':00</option>');
+    }
+    return out.join('');
+  }
+
+  function defaultWindow() {
+    if (state.eventType === 'subscription') return null;
+    return { start: 8, end: 11 };
+  }
+
+  function newRule(type, value, unit, window) {
+    return {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'r' + Math.random().toString(36).slice(2)),
+      type: type || 'before_expiry',
+      value: value == null ? 1 : value,
+      unit: unit || 'days',
+      repeatInterval: type === 'after_expiry' ? 24 : null,
+      repeatUntil: 'renewed',
+      isEnabled: true,
+      hourWindow: window === undefined ? defaultWindow() : window
+    };
+  }
+
+  function renderRules() {
+    var host = $('ruleList');
+    if (state.rules.length === 0) {
+      host.innerHTML = '<div class="xs muted" style="padding:6px 2px;">还没有规则，点下面的按钮添加，或直接套用预设。</div>';
+      return;
+    }
+    host.innerHTML = state.rules.map(function (r, i) {
+      var isAfter = r.type === 'after_expiry';
+      var isOn = r.type === 'on_expiry';
+      var win = r.hourWindow;
+      var unitOptions = [['days', '天'], ['hours', '小时']].map(function (u) {
+        return '<option value="' + u[0] + '"' + (r.unit === u[0] ? ' selected' : '') + '>' + u[1] + '</option>';
+      }).join('');
+
+      var valuePart = isOn || isAfter ? '' :
+        '<input class="input w-num r-value" type="number" min="0" max="999" value="' + r.value + '">' +
+        '<select class="select w-unit r-unit">' + unitOptions + '</select>';
+
+      var afterPart = isAfter
+        ? '<span class="rule-sep">后每</span><input class="input w-num r-interval" type="number" min="1" max="720" value="' + (r.repeatInterval || 24) + '"><span class="rule-sep">小时</span>'
+        : '';
+
+      return '<div class="rule-row' + (r.isEnabled ? '' : ' off') + '" data-idx="' + i + '">' +
+        '<label class="switch"><input type="checkbox" class="r-on"' + (r.isEnabled ? ' checked' : '') + '><span class="track"></span></label>' +
+        '<select class="select w-type r-type">' +
+          '<option value="before_expiry"' + (r.type === 'before_expiry' ? ' selected' : '') + '>提前提醒</option>' +
+          '<option value="on_expiry"' + (r.type === 'on_expiry' ? ' selected' : '') + '>当天提醒</option>' +
+          '<option value="after_expiry"' + (r.type === 'after_expiry' ? ' selected' : '') + '>到期后重复</option>' +
+        '</select>' +
+        valuePart + afterPart +
+        '<span class="rule-sep">·</span>' +
+        '<select class="select r-winmode" style="width:96px;">' +
+          '<option value="any"' + (!win ? ' selected' : '') + '>不限时间</option>' +
+          '<option value="range"' + (win ? ' selected' : '') + '>限定时段</option>' +
+        '</select>' +
+        '<span class="win-range"' + (win ? '' : ' style="display:none;"') + '>' +
+          '<select class="select r-h1">' + hourOptions(win ? pad(win.start) : '08') + '</select>' +
+          '<span class="rule-sep">至</span>' +
+          '<select class="select r-h2">' + hourOptions(win ? pad(win.end) : '11') + '</select>' +
+        '</span>' +
+        '<button type="button" class="icon-btn danger r-del" title="删除规则" style="margin-left:auto;">' + ICON.trash + '</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function syncRules() {
+    var rows = $('ruleList').querySelectorAll('.rule-row');
+    Array.prototype.forEach.call(rows, function (row) {
+      var idx = Number(row.getAttribute('data-idx'));
+      var r = state.rules[idx];
+      if (!r) return;
+      r.isEnabled = row.querySelector('.r-on').checked;
+      r.type = row.querySelector('.r-type').value;
+      var vEl = row.querySelector('.r-value');
+      var uEl = row.querySelector('.r-unit');
+      if (vEl) r.value = Math.max(0, Number(vEl.value) || 0);
+      if (uEl) r.unit = uEl.value;
+      var iEl = row.querySelector('.r-interval');
+      if (iEl) r.repeatInterval = Math.max(1, Number(iEl.value) || 24);
+      var mode = row.querySelector('.r-winmode').value;
+      if (mode === 'range') {
+        r.hourWindow = {
+          start: Number(row.querySelector('.r-h1').value),
+          end: Number(row.querySelector('.r-h2').value)
+        };
+      } else {
+        r.hourWindow = null;
+      }
+    });
+  }
+
+  function applyPreset(kind) {
+    if (kind === 'birthday') {
+      state.rules = [
+        newRule('before_expiry', 2, 'days', null),
+        newRule('before_expiry', 1, 'days', null),
+        newRule('on_expiry', 0, 'days', { start: 8, end: 11 })
+      ];
+    } else {
+      state.rules = [
+        newRule('before_expiry', 7, 'days', null),
+        newRule('before_expiry', 3, 'days', null),
+        newRule('before_expiry', 1, 'days', null),
+        newRule('on_expiry', 0, 'days', null)
+      ];
+    }
+    renderRules();
+  }
+
+  // ── 打开 / 关闭表单 ─────────────────────────────────────────────────
+  function openForm(sub, presetType) {
+    state.editingId = sub ? sub.id : null;
+    $('formTitle').textContent = sub ? '编辑提醒' : '新建提醒';
+    $('formDesc').textContent = sub ? '修改后立即生效，历史通知记录不受影响' : '填写后保存，系统会按规则定时推送';
+
+    // 重置
+    $('fName').value = sub ? sub.name || '' : '';
+    $('fCategory').value = sub ? sub.category || '' : '';
+    $('fNotes').value = sub ? sub.notes || '' : '';
+    $('fStart').value = sub && sub.startDate ? fmtDate(sub.startDate) : '';
+    $('fExpiry').value = sub && sub.expiryDate ? fmtDate(sub.expiryDate) : '';
+    $('fPeriodValue').value = sub && sub.periodValue ? sub.periodValue : 1;
+    $('fPeriodUnit').value = sub && sub.periodUnit ? sub.periodUnit : 'month';
+    $('fMode').value = sub && sub.subscriptionMode ? sub.subscriptionMode : 'cycle';
+    $('fAmount').value = sub && sub.amount != null ? sub.amount : '';
+    $('fCurrency').value = sub && sub.currency ? sub.currency : 'CNY';
+    $('fCycleLunar').checked = !!(sub && sub.eventType === 'subscription' && sub.useLunar);
+    $('fEndOfMonth').checked = !!(sub && sub.endOfMonth);
+    $('fActive').checked = sub ? sub.isActive !== false : true;
+    $('fBirthYear').value = sub && sub.birthYear ? sub.birthYear : '';
+    $('fNameErr').textContent = '';
+    $('fExpiryErr').textContent = '';
+    $('fName').classList.remove('invalid');
+    $('fExpiry').classList.remove('invalid');
+
+    var type = sub ? (sub.eventType || 'subscription') : (presetType || 'subscription');
+    var cal = sub && sub.useLunar ? 'lunar' : 'solar';
+    state.calendar = cal;
+    Array.prototype.forEach.call($('calendarSeg').children, function (b) {
+      b.classList.toggle('active', b.getAttribute('data-cal') === cal);
+    });
+    fillMonthDayOptions();
+
+    if (sub && (type === 'birthday' || type === 'anniversary')) {
+      var m = Number(sub.birthdayMonth) || 1;
+      var d = Number(sub.birthdayDay) || 1;
+      $('fBirthMonth').value = String(m);
+      fillMonthDayOptions();
+      $('fBirthMonth').value = String(m);
+      $('fBirthDay').value = String(d);
+    } else {
+      $('fBirthMonth').value = '1';
+      fillMonthDayOptions();
+      $('fBirthDay').value = '1';
+    }
+
+    // 规则
+    if (sub && Array.isArray(sub.reminderRules) && sub.reminderRules.length > 0) {
+      state.rules = sub.reminderRules.map(function (r) {
+        return {
+          id: r.id || newRule().id,
+          type: r.type || 'before_expiry',
+          value: typeof r.value === 'number' ? r.value : 0,
+          unit: r.unit || 'days',
+          repeatInterval: r.repeatInterval || (r.type === 'after_expiry' ? 24 : null),
+          repeatUntil: r.repeatUntil || 'renewed',
+          isEnabled: r.isEnabled !== false,
+          hourWindow: r.hourWindow || null
+        };
+      });
+    } else if (sub) {
+      state.rules = [];
+    } else {
+      state.rules = [];
+    }
+
+    setEventType(type);
+    renderRules();
+
+    if (!sub) {
+      if (type === 'subscription') applyPreset('sub');
+      else applyPreset('birthday');
+    }
+
+    $('formModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { $('fName').focus(); }, 60);
+  }
+
+  function closeForm() {
+    $('formModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ── 保存 ────────────────────────────────────────────────────────────
+  function buildPayload() {
+    var name = $('fName').value.trim();
+    $('fName').classList.remove('invalid');
+    $('fNameErr').textContent = '';
+    if (!name) {
+      $('fName').classList.add('invalid');
+      $('fNameErr').textContent = '请填写名称';
+      return null;
+    }
+
+    var isSub = state.eventType === 'subscription';
+    var payload = {
+      name: name,
+      eventType: state.eventType,
+      category: $('fCategory').value.trim(),
+      customType: '',
+      notes: $('fNotes').value.trim(),
+      isActive: $('fActive').checked,
+      currency: $('fCurrency').value,
+      amount: isSub ? ($('fAmount').value === '' ? null : Number($('fAmount').value)) : null
+    };
+
+    if (isSub) {
+      var expiry = $('fExpiry').value;
+      $('fExpiry').classList.remove('invalid');
+      $('fExpiryErr').textContent = '';
+      if (!expiry) {
+        $('fExpiry').classList.add('invalid');
+        $('fExpiryErr').textContent = '请选择到期日期';
+        return null;
+      }
+      payload.startDate = $('fStart').value || '';
+      payload.expiryDate = expiry;
+      payload.periodValue = Math.max(1, Number($('fPeriodValue').value) || 1);
+      payload.periodUnit = $('fPeriodUnit').value;
+      payload.subscriptionMode = $('fMode').value;
+      payload.endOfMonth = $('fEndOfMonth').checked;
+      payload.useLunar = $('fCycleLunar').checked;
+      payload.autoRenew = true;
+    } else {
+      payload.useLunar = state.calendar === 'lunar';
+      payload.birthdayMonth = Number($('fBirthMonth').value);
+      payload.birthdayDay = Number($('fBirthDay').value);
+      payload.birthYear = $('fBirthYear').value ? Number($('fBirthYear').value) : null;
+    }
+
+    syncRules();
+    payload.reminderRules = state.rules.map(function (r) {
+      return {
+        id: r.id,
+        type: r.type,
+        value: r.value,
+        unit: r.unit,
+        repeatInterval: r.repeatInterval,
+        repeatUntil: r.repeatUntil || 'renewed',
+        isEnabled: r.isEnabled,
+        hourWindow: r.hourWindow
+      };
+    });
+
+    return payload;
+  }
+
+  async function saveForm() {
+    var payload = buildPayload();
+    if (!payload) return;
+
+    var btn = $('formSave');
+    var original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 保存中…';
+
+    try {
+      if (state.editingId) {
+        await api('PUT', '/api/subscriptions/' + encodeURIComponent(state.editingId), payload);
+        toast('已保存修改', 'ok');
+      } else {
+        await api('POST', '/api/subscriptions', payload);
+        toast('提醒已创建', 'ok');
+      }
+      closeForm();
+      await loadAll();
+    } catch (err) {
+      toast(err.message || '保存失败', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+
+  // ── 行内操作 ────────────────────────────────────────────────────────
+  async function handleAction(act, id) {
+    var sub = state.subs.find(function (s) { return s.id === id; });
+    if (!sub) return;
+
+    if (act === 'edit') {
+      try {
+        var detail = await api('GET', '/api/subscriptions/' + encodeURIComponent(id));
+        var rulesRes = await api('GET', '/api/subscriptions/' + encodeURIComponent(id) + '/reminders');
+        var merged = Object.assign({}, detail, {
+          reminderRules: (rulesRes && rulesRes.rules) || sub.reminderRules || []
+        });
+        openForm(merged);
+      } catch (err) {
+        toast(err.message || '读取详情失败', 'err');
+      }
+      return;
+    }
+
+    if (act === 'test') {
+      try {
+        var r = await api('POST', '/api/subscriptions/' + encodeURIComponent(id) + '/test-notify', {});
+        toast(r && r.message ? r.message : '已发送', r && r.success ? 'ok' : 'err');
+      } catch (err) {
+        toast(err.message || '发送失败', 'err');
+      }
+      return;
+    }
+
+    if (act === 'renew') {
+      if (!window.confirm('确认已经续费「' + sub.name + '」？\n系统会把到期日顺延一个周期，并生成一条缴费记录。')) return;
+      try {
+        var res = await api('POST', '/api/subscriptions/' + encodeURIComponent(id) + '/renew', {});
+        toast(res && res.message ? res.message : '已续订', res && res.success ? 'ok' : 'err');
+        await loadAll();
+      } catch (err) {
+        toast(err.message || '续订失败', 'err');
+      }
+      return;
+    }
+
+    if (act === 'pay') {
+      openPayments(sub);
+      return;
+    }
+
+    if (act === 'del') {
+      if (!window.confirm('删除「' + sub.name + '」后无法恢复，确认删除？')) return;
+      try {
+        await api('DELETE', '/api/subscriptions/' + encodeURIComponent(id));
+        toast('已删除', 'ok');
+        await loadAll();
+      } catch (err) {
+        toast(err.message || '删除失败', 'err');
+      }
+    }
+  }
+
+  async function toggleStatus(id, isActive) {
+    try {
+      await api('POST', '/api/subscriptions/' + encodeURIComponent(id) + '/toggle-status', { isActive: isActive });
+      var sub = state.subs.find(function (s) { return s.id === id; });
+      if (sub) sub.isActive = isActive;
+      renderStats();
+      renderList();
+      toast(isActive ? '已启用' : '已停用', 'ok');
+    } catch (err) {
+      toast(err.message || '操作失败', 'err');
+      await loadAll();
+    }
+  }
+
+  // ── 缴费记录 ────────────────────────────────────────────────────────
+  function openPayments(sub) {
+    state.paySubId = sub.id;
+    $('paySubName').textContent = sub.name;
+    var records = (sub.paymentHistory || []).slice().reverse();
+    var body = $('payBody');
+    if (records.length === 0) {
+      body.innerHTML = '';
+      $('payEmpty').classList.remove('hidden');
+    } else {
+      $('payEmpty').classList.add('hidden');
+      body.innerHTML = records.map(function (p) {
+        var sym = UNIT_LABEL[p.currency || sub.currency || 'CNY'] || '';
+        return '<tr>' +
+          '<td data-label="日期"><span class="mono small">' + fmtDate(p.date) + '</span></td>' +
+          '<td data-label="金额"><span class="strong">' + esc(sym) + esc(Number(p.amount || 0).toLocaleString('zh-CN')) + '</span></td>' +
+          '<td data-label="说明"><span class="xs text-2">' + esc(p.note || '—') + '</span></td>' +
+          '<td data-label=""><button class="icon-btn danger" data-pay="' + esc(p.id) + '" title="删除记录">' + ICON.trash + '</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+    $('payModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePayments() {
+    $('payModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  async function deletePayment(payId) {
+    if (!window.confirm('删除这条缴费记录？这不会改变当前的到期日期。')) return;
+    try {
+      await api('DELETE', '/api/subscriptions/' + encodeURIComponent(state.paySubId) + '/payments/' + encodeURIComponent(payId));
+      toast('记录已删除', 'ok');
+      var r = await api('GET', '/api/subscriptions/' + encodeURIComponent(state.paySubId));
+      openPayments(r);
+      await loadAll();
+    } catch (err) {
+      toast(err.message || '删除失败', 'err');
+    }
+  }
+
+  // ── 事件绑定 ────────────────────────────────────────────────────────
+  function bind() {
+    $('btnNew').addEventListener('click', function () { openForm(null, 'subscription'); });
+    $('btnNewBirthday').addEventListener('click', function () { openForm(null, 'birthday'); });
+    $('emptyAddBirthday').addEventListener('click', function () { openForm(null, 'birthday'); });
+    $('emptyAddSub').addEventListener('click', function () { openForm(null, 'subscription'); });
+    $('formClose').addEventListener('click', closeForm);
+    $('formCancel').addEventListener('click', closeForm);
+    $('formSave').addEventListener('click', saveForm);
+    $('payClose').addEventListener('click', closePayments);
+    $('payDone').addEventListener('click', closePayments);
+
+    $('eventTypeSeg').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-type]');
+      if (!btn) return;
+      if (btn.getAttribute('data-type') === state.eventType) return;
+      setEventType(btn.getAttribute('data-type'));
+      if (state.eventType !== 'subscription' && state.editingId === null) applyPreset('birthday');
+    });
+
+    $('calendarSeg').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-cal]');
+      if (!btn) return;
+      setCalendar(btn.getAttribute('data-cal'));
+    });
+
+    $('fBirthMonth').addEventListener('change', function () {
+      fillMonthDayOptions();
+      updateBirthPreview();
+    });
+    $('fBirthDay').addEventListener('change', updateBirthPreview);
+
+    $('btnAddRule').addEventListener('click', function () {
+      syncRules();
+      state.rules.push(newRule('before_expiry', 1, 'days', null));
+      renderRules();
+    });
+    $('btnPresetSub').addEventListener('click', function () { applyPreset('sub'); });
+    $('btnPresetBirth').addEventListener('click', function () { applyPreset('birthday'); });
+
+    $('ruleList').addEventListener('click', function (e) {
+      var del = e.target.closest('.r-del');
+      if (del) {
+        syncRules();
+        var row = del.closest('.rule-row');
+        var idx = Number(row.getAttribute('data-idx'));
+        state.rules.splice(idx, 1);
+        renderRules();
+        return;
+      }
+      var winMode = e.target.closest('.r-winmode');
+      if (winMode) {
+        var wrap = winMode.parentElement.querySelector('.win-range');
+        if (wrap) wrap.style.display = winMode.value === 'range' ? '' : 'none';
+      }
+    });
+
+    $('ruleList').addEventListener('change', function (e) {
+      if (e.target.classList.contains('r-type')) {
+        syncRules();
+        renderRules();
+      } else if (e.target.classList.contains('r-on')) {
+        syncRules();
+        var row = e.target.closest('.rule-row');
+        row.classList.toggle('off', !e.target.checked);
+      }
+    });
+
+    $('listBody').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var act = btn.getAttribute('data-act');
+      var id = btn.getAttribute('data-id');
+      if (act === 'toggle') return;
+      handleAction(act, id);
+    });
+
+    $('listBody').addEventListener('change', function (e) {
+      var el = e.target.closest('[data-act="toggle"]');
+      if (!el) return;
+      toggleStatus(el.getAttribute('data-id'), el.checked);
+    });
+
+    $('payBody').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-pay]');
+      if (!btn) return;
+      deletePayment(btn.getAttribute('data-pay'));
+    });
+
+    $('searchInput').addEventListener('input', function (e) {
+      state.filter.q = e.target.value;
+      renderList();
+    });
+    $('typeFilter').addEventListener('change', function (e) {
+      state.filter.type = e.target.value;
+      renderList();
+    });
+    $('statusFilter').addEventListener('change', function (e) {
+      state.filter.status = e.target.value;
+      renderList();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if ($('formModal').classList.contains('open')) closeForm();
+        if ($('payModal').classList.contains('open')) closePayments();
+      }
+    });
+
+    [$('formModal'), $('payModal')].forEach(function (mask) {
+      mask.addEventListener('mousedown', function (e) {
+        if (e.target === mask) {
+          if (mask.id === 'formModal') closeForm();
+          else closePayments();
+        }
+      });
+    });
+  }
+
+  bind();
+  fillMonthDayOptions();
+  loadAll();
+})();
+</script>
+</body>
+</html>

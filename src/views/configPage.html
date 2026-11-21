@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统设置 · Date Reminder</title>
+  ${themeResources}
+  <style>
+    .cfg-grid { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 10px 14px; align-items: center; }
+    .cfg-grid .label { padding-top: 0; }
+    @media (max-width: 720px) { .cfg-grid { grid-template-columns: 1fr; gap: 6px; } .cfg-grid .label { margin-top: 8px; } }
+
+    .hours { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px; }
+    @media (max-width: 720px) { .hours { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+    .hour-chip {
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text-2);
+      border-radius: var(--r-xs);
+      height: 28px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+    }
+    .hour-chip:hover { border-color: var(--brand); color: var(--brand); }
+    .hour-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    html[data-theme="dark"] .hour-chip.active { color: #07121f; }
+
+    .save-bar {
+      position: fixed; left: var(--sidebar-w); right: 0; bottom: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 28px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      box-shadow: 0 -2px 10px rgba(16,24,40,.06);
+      z-index: 40;
+    }
+    @media (max-width: 860px) {
+      .save-bar { left: 0; padding: 10px 14px; }
+    }
+    .secret-row { display: flex; gap: 6px; }
+    .secret-row .input { flex: 1 1 auto; }
+    .ch-state { font-size: 11.5px; }
+    .channel-head .chev { transition: transform .18s; color: var(--text-3); }
+    .channel.open .channel-head .chev { transform: rotate(180deg); }
+    .table-compact td { padding: 8px 10px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Date Reminder</div>
+        <div class="brand-sub">系统设置</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">工作台</div>
+      <a class="nav-item" href="/admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>提醒清单</span>
+      </a>
+      <a class="nav-item" href="/admin/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>总览</span>
+      </a>
+      <a class="nav-item" href="/admin/notify-logs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span>通知记录</span>
+      </a>
+      <div class="nav-label">设置</div>
+      <a class="nav-item active" href="/admin/config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 008.9 19a1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 005 8.9a1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span>系统设置</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="user-avatar">A</div>
+        <div class="user-name grow truncate" id="userName">管理员</div>
+        <a class="link-quiet" href="/api/logout" title="退出登录">退出</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>系统设置</h1>
+        <div class="sub">配置通知渠道、提醒时段与账号安全</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="saveTopBtn">保存设置</button>
+      </div>
+    </header>
+
+    <div class="content" style="padding-bottom:96px;">
+
+      <!-- ══ 通知渠道 ══ -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>通知渠道</h3>
+            <div class="desc">至少开启一个渠道，提醒才能真正送达。配置完点右侧「测试」确认能收到。</div>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <!-- 微信推送 -->
+          <div class="channel" data-channel="wxpusher">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-2.6 6.1A8.5 8.5 0 0112 20a8.6 8.6 0 01-4-1L3 20l1.3-4A8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">微信推送 <span class="badge badge-ok ch-state" id="state-wxpusher" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">手机微信直接收消息，无需企业微信 · 最适合家人</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="wxpusher"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">AppToken <span class="req">*</span></label>
+                <div class="secret-row">
+                  <input class="input" id="wxpAppToken" placeholder="AT_xxxxxxxx" autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="WXPUSHER_APP_TOKEN">清除</button>
+                </div>
+
+                <label class="label">接收人 UID <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="wxpUids" placeholder="UID_xxxx，多个用英文逗号分隔">
+                  <div class="help">在 wxpusher.com 用微信扫码登录 → 关注应用 → 「我的」里能看到 UID。</div>
+                </div>
+
+                <label class="label">主题 ID</label>
+                <div>
+                  <input class="input" id="wxpTopicIds" placeholder="选填，例如 12345">
+                  <div class="help">想推给一群人时用主题 ID，个人使用留空即可。</div>
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">发到微信「服务通知」里，点开即可阅读。</div>
+                <button class="btn btn-sm" data-test="wxpusher">发送测试</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 企业微信应用 -->
+          <div class="channel" data-channel="wechatapp">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">企业微信应用消息 <span class="badge badge-ok ch-state" id="state-wechatapp" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">成员开通「微信插件」后，消息直接进个人微信</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="wechatapp"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">企业 ID（CorpID）<span class="req">*</span></label>
+                <div>
+                  <input class="input" id="wxaCorpId" placeholder="ww1234567890abcdef">
+                  <div class="help">企业微信管理后台 →「我的企业」→ 底部「企业 ID」。</div>
+                </div>
+
+                <label class="label">应用 Secret <span class="req">*</span></label>
+                <div class="secret-row">
+                  <input class="input" id="wxaSecret" placeholder="应用详情里的 Secret" autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="WECHATAPP_SECRET">清除</button>
+                </div>
+
+                <label class="label">AgentId <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="wxaAgentId" placeholder="1000002">
+                  <div class="help">「应用管理」→ 自建应用 → 详情页顶部的 AgentId（纯数字）。</div>
+                </div>
+
+                <label class="label">接收人账号</label>
+                <div>
+                  <input class="input" id="wxaToUser" placeholder="@all 或 zhangsan|zhangsan,lisi">
+                  <div class="help">填企业微信里的「账号」（不是手机号）。@all 表示应用可见范围内所有人。</div>
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">需要在企业微信后台把「可信 IP」或「企业可信域名」放通，否则会提示 60020。</div>
+                <button class="btn btn-sm" data-test="wechatapp">发送测试</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 企业微信群机器人 -->
+          <div class="channel" data-channel="wechatbot">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.9"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">企业微信群机器人 <span class="badge badge-ok ch-state" id="state-wechatbot" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">推到群里，适合家庭群、团队群共享提醒</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="wechatbot"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">Webhook 地址 <span class="req">*</span></label>
+                <div class="secret-row">
+                  <input class="input" id="wcWebhook" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..." autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="WECHATBOT_WEBHOOK">清除</button>
+                </div>
+
+                <label class="label">消息格式</label>
+                <select class="select" id="wcMsgType" style="max-width:220px;">
+                  <option value="text">纯文本</option>
+                  <option value="markdown">Markdown（更美观）</option>
+                </select>
+
+                <label class="label">@ 设置</label>
+                <div class="flex gap-16 wrap" style="padding-top:4px;">
+                  <label class="switch"><input type="checkbox" id="wcAtAll"><span class="track"></span><span class="switch-text">@所有人</span></label>
+                  <input class="input" id="wcAtMobiles" placeholder="@指定人手机号，逗号分隔（选填）" style="max-width:280px;">
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">群聊右上角 →「群机器人」→ 添加后复制 Webhook。</div>
+                <button class="btn btn-sm" data-test="wechatbot">发送测试</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- QQ -->
+          <div class="channel" data-channel="qq">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 15a4 4 0 007 0"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">QQ 提醒 <span class="badge badge-ok ch-state" id="state-qq" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">通过 OneBot 协议发到 QQ 私聊或群</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="qq"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">OneBot 地址 <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="qqUrl" placeholder="http://1.2.3.4:3000">
+                  <div class="help">NapCat / Lagrange / go-cqhttp 的 HTTP 服务地址（包含端口，不带路径）。必须是公网可访问地址。</div>
+                </div>
+
+                <label class="label">Access Token</label>
+                <div class="secret-row">
+                  <input class="input" id="qqToken" placeholder="OneBot 配置里的 access_token，没有可留空" autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="QQ_ONEBOT_TOKEN">清除</button>
+                </div>
+
+                <label class="label">发送对象</label>
+                <div class="flex gap-8 wrap">
+                  <select class="select" id="qqTargetType" style="width:120px;">
+                    <option value="private">QQ 私聊</option>
+                    <option value="group">QQ 群</option>
+                  </select>
+                  <input class="input" id="qqTargetId" placeholder="QQ 号或群号，多个用逗号分隔" style="flex:1 1 200px;">
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">QQ 渠道需要一个 24 小时在线的 OneBot 服务；没有的话可以只用微信渠道。</div>
+                <button class="btn btn-sm" data-test="qq">发送测试</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="callout warn mt-16">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+            <div>密钥类字段保存后会隐藏。再次保存时<b>留空表示不修改</b>，要彻底删除请点「清除」后再保存。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 提醒策略 ══ -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>提醒策略</h3>
+            <div class="desc">决定「什么时候允许发消息」以及日期的显示方式</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cfg-grid">
+            <label class="label">时区</label>
+            <div>
+              <select class="select" id="timezone" style="max-width:320px;"></select>
+              <div class="help">所有日期、农历换算、发送时段都以这个时区为准。国内用户请选 Asia/Shanghai。</div>
+            </div>
+
+            <label class="label">允许发送的小时</label>
+            <div>
+              <div class="hours" id="hourGrid"></div>
+              <div class="flex gap-8 wrap mt-12">
+                <button type="button" class="btn btn-xs" id="hoursAll">全天都可发</button>
+                <button type="button" class="btn btn-xs" id="hoursWork">仅 08–21 点</button>
+                <button type="button" class="btn btn-xs" id="hoursNone">清空</button>
+                <span class="xs muted" id="hoursSummary" style="align-self:center;"></span>
+              </div>
+              <div class="help mt-8">一个都不选 = 全天任意整点都可发送。选中的小时之外，系统会跳过不推送。</div>
+            </div>
+
+            <label class="label">农历显示</label>
+            <div class="flex gap-24 wrap" style="padding-top:4px;">
+              <label class="switch"><input type="checkbox" id="showLunar"><span class="track"></span><span class="switch-text">在通知内容里附带农历日期</span></label>
+            </div>
+
+            <label class="label">界面主题</label>
+            <select class="select" id="themeMode" style="max-width:220px;">
+              <option value="light">浅色</option>
+              <option value="dark">深色</option>
+              <option value="system">跟随系统</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 账号与安全 ══ -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>账号与安全</h3>
+            <div class="desc">修改后台登录账号；密码留空表示不修改</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cfg-grid">
+            <label class="label">管理员用户名</label>
+            <input class="input" id="adminUsername" style="max-width:320px;" autocomplete="username">
+
+            <label class="label">新密码</label>
+            <div>
+              <input class="input" type="password" id="adminPassword" placeholder="不修改请留空" style="max-width:320px;" autocomplete="new-password">
+              <div class="help">建议 12 位以上，包含字母、数字与符号。</div>
+            </div>
+
+            <label class="label">确认新密码</label>
+            <input class="input" type="password" id="adminPassword2" placeholder="再输入一次" style="max-width:320px;" autocomplete="new-password">
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 数据与接口 ══ -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>数据与接口</h3>
+            <div class="desc">备份迁移、历史保留、第三方调用</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cfg-grid">
+            <label class="label">数据备份</label>
+            <div class="flex gap-8 wrap">
+              <button type="button" class="btn btn-sm" id="btnExport">导出备份（JSON）</button>
+              <button type="button" class="btn btn-sm" id="btnImport">导入备份</button>
+              <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+            </div>
+
+            <label class="label">缴费记录保留</label>
+            <div class="flex gap-8 center">
+              <input class="input" type="number" id="payLimit" min="10" max="1000" step="10" style="width:110px;">
+              <span class="small muted">条 / 每个订阅</span>
+            </div>
+
+            <label class="label">第三方接口令牌</label>
+            <div>
+              <div class="secret-row" style="max-width:520px;">
+                <input class="input" id="thirdPartyToken" placeholder="用于 /api/notify 调用，留空则不启用" autocomplete="off">
+                <button type="button" class="btn btn-sm" id="btnGenToken">随机生成</button>
+                <button type="button" class="btn btn-sm clear-secret" data-key="THIRD_PARTY_API_TOKEN">清除</button>
+              </div>
+              <div class="help mt-8">配置后可用下面的命令从任意系统给手机发消息：</div>
+              <pre class="mono xs" style="background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:10px;overflow:auto;margin:8px 0 0;">curl -X POST "&lt;你的站点地址&gt;/api/notify/&lt;令牌&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"标题","content":"正文"}'</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="save-bar">
+      <div class="xs muted" id="saveHint">修改后记得点右侧保存</div>
+      <div class="flex gap-8">
+        <button class="btn" id="reloadBtn">放弃修改</button>
+        <button class="btn btn-primary" id="saveBtn">保存设置</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var TIMEZONES = [
+    ['Asia/Shanghai', '中国标准时间（Asia/Shanghai）'],
+    ['Asia/Hong_Kong', '中国香港（Asia/Hong_Kong）'],
+    ['Asia/Taipei', '中国台湾（Asia/Taipei）'],
+    ['Asia/Tokyo', '日本（Asia/Tokyo）'],
+    ['Asia/Singapore', '新加坡（Asia/Singapore）'],
+    ['Europe/London', '伦敦（Europe/London）'],
+    ['America/New_York', '纽约（America/New_York）'],
+    ['America/Los_Angeles', '洛杉矶（America/Los_Angeles）'],
+    ['UTC', 'UTC']
+  ];
+
+  var state = { config: {}, clearSecrets: [], hours: [] };
+
+  function $(id) { return document.getElementById(id); }
+
+  function toast(msg, kind) {
+    var host = $('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (kind || 'info');
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .2s';
+      setTimeout(function () { el.remove(); }, 220);
+    }, 3000);
+  }
+
+  async function api(method, url, body) {
+    var opts = { method: method, credentials: 'same-origin', headers: {} };
+    if (body !== undefined) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    var res = await fetch(url, opts);
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 401) { window.location.href = '/'; throw new Error('登录已过期'); }
+    if (!res.ok) throw new Error((data && data.message) || ('请求失败（' + res.status + '）'));
+    return data;
+  }
+
+  // ── 小时选择 ────────────────────────────────────────────────────────
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function renderHours() {
+    var grid = $('hourGrid');
+    var cells = [];
+    for (var h = 0; h < 24; h++) {
+      var v = pad(h);
+      var on = state.hours.indexOf(v) !== -1;
+      cells.push('<button type="button" class="hour-chip' + (on ? ' active' : '') + '" data-hour="' + v + '">' + v + '</button>');
+    }
+    grid.innerHTML = cells.join('');
+    updateHoursSummary();
+  }
+
+  function updateHoursSummary() {
+    var s = $('hoursSummary');
+    if (state.hours.length === 0 || state.hours.indexOf('*') !== -1) {
+      s.textContent = '当前：全天（每小时检查一次）';
+    } else {
+      var sorted = state.hours.slice().sort();
+      s.textContent = '当前：每天 ' + sorted.length + ' 个整点会检查（' + sorted.join('、') + ' 点）';
+    }
+  }
+
+  // ── 渲染配置 ────────────────────────────────────────────────────────
+  function setSecretField(id, cfg, key, label) {
+    var el = $(id);
+    if (!el) return;
+    el.value = '';
+    var configured = cfg[key + '_CONFIGURED'] === true;
+    el.placeholder = configured ? (label + ' 已保存，留空表示不修改') : (label + ' 未配置');
+  }
+
+  function renderStates(cfg) {
+    var map = {
+      wxpusher: cfg.WXPUSHER_APP_TOKEN_CONFIGURED && cfg.WXPUSHER_UIDS,
+      wechatapp: cfg.WECHATAPP_CORP_ID && cfg.WECHATAPP_SECRET_CONFIGURED && cfg.WECHATAPP_AGENT_ID,
+      wechatbot: cfg.WECHATBOT_WEBHOOK_CONFIGURED,
+      qq: cfg.QQ_ONEBOT_URL && cfg.QQ_TARGET_ID
+    };
+    Object.keys(map).forEach(function (k) {
+      var el = $('state-' + k);
+      if (!el) return;
+      var ok = !!map[k];
+      el.className = 'badge ch-state ' + (ok ? 'badge-ok' : 'badge-neutral');
+      el.textContent = ok ? '已配置' : '未配置';
+    });
+  }
+
+  function applyConfig(cfg) {
+    state.config = cfg;
+    state.clearSecrets = [];
+
+    // 账号
+    $('adminUsername').value = cfg.ADMIN_USERNAME || 'admin';
+    if (cfg.ADMIN_USERNAME) $('userName').textContent = cfg.ADMIN_USERNAME;
+
+    // 渠道开关
+    var enabled = Array.isArray(cfg.ENABLED_NOTIFIERS) ? cfg.ENABLED_NOTIFIERS : [];
+    Array.prototype.forEach.call(document.querySelectorAll('[data-notifier]'), function (input) {
+      input.checked = enabled.indexOf(input.getAttribute('data-notifier')) !== -1;
+    });
+
+    // 微信推送
+    setSecretField('wxpAppToken', cfg, 'WXPUSHER_APP_TOKEN', 'AppToken');
+    $('wxpUids').value = cfg.WXPUSHER_UIDS || '';
+    $('wxpTopicIds').value = cfg.WXPUSHER_TOPIC_IDS || '';
+
+    // 企业微信应用
+    $('wxaCorpId').value = cfg.WECHATAPP_CORP_ID || '';
+    setSecretField('wxaSecret', cfg, 'WECHATAPP_SECRET', 'Secret');
+    $('wxaAgentId').value = cfg.WECHATAPP_AGENT_ID || '';
+    $('wxaToUser').value = cfg.WECHATAPP_TO_USER || '@all';
+
+    // 群机器人
+    setSecretField('wcWebhook', cfg, 'WECHATBOT_WEBHOOK', 'Webhook');
+    $('wcMsgType').value = cfg.WECHATBOT_MSG_TYPE === 'markdown' ? 'markdown' : 'text';
+    $('wcAtAll').checked = cfg.WECHATBOT_AT_ALL === 'true';
+    $('wcAtMobiles').value = cfg.WECHATBOT_AT_MOBILES || '';
+
+    // QQ
+    $('qqUrl').value = cfg.QQ_ONEBOT_URL || '';
+    setSecretField('qqToken', cfg, 'QQ_ONEBOT_TOKEN', 'Token');
+    $('qqTargetType').value = cfg.QQ_TARGET_TYPE === 'group' ? 'group' : 'private';
+    $('qqTargetId').value = cfg.QQ_TARGET_ID || '';
+
+    // 策略
+    var tzSelect = $('timezone');
+    var zones = TIMEZONES.slice();
+    var currentTz = cfg.TIMEZONE || 'Asia/Shanghai';
+    if (!zones.some(function (z) { return z[0] === currentTz; })) {
+      zones.push([currentTz, currentTz]);
+    }
+    tzSelect.innerHTML = zones.map(function (z) {
+      return '<option value="' + z[0] + '"' + (z[0] === currentTz ? ' selected' : '') + '>' + z[1] + '</option>';
+    }).join('');
+
+    state.hours = Array.isArray(cfg.NOTIFICATION_HOURS) ? cfg.NOTIFICATION_HOURS.slice() : [];
+    renderHours();
+
+    $('showLunar').checked = cfg.SHOW_LUNAR !== false;
+    $('themeMode').value = cfg.THEME_MODE || 'light';
+
+    // 数据
+    $('payLimit').value = cfg.PAYMENT_HISTORY_LIMIT || 100;
+    setSecretField('thirdPartyToken', cfg, 'THIRD_PARTY_API_TOKEN', '令牌');
+
+    renderStates(cfg);
+  }
+
+  async function loadConfig() {
+    try {
+      var cfg = await api('GET', '/api/config');
+      applyConfig(cfg || {});
+    } catch (err) {
+      toast(err.message || '读取配置失败', 'err');
+    }
+  }
+
+  // ── 保存 ────────────────────────────────────────────────────────────
+  function collect() {
+    var pwd = $('adminPassword').value;
+    var pwd2 = $('adminPassword2').value;
+    if (pwd && pwd !== pwd2) {
+      throw new Error('两次输入的新密码不一致');
+    }
+
+    var enabled = [];
+    Array.prototype.forEach.call(document.querySelectorAll('[data-notifier]'), function (input) {
+      if (input.checked) enabled.push(input.getAttribute('data-notifier'));
+    });
+
+    var payload = {
+      ADMIN_USERNAME: $('adminUsername').value.trim() || 'admin',
+      ENABLED_NOTIFIERS: enabled,
+
+      WXPUSHER_APP_TOKEN: $('wxpAppToken').value.trim(),
+      WXPUSHER_UIDS: $('wxpUids').value.trim(),
+      WXPUSHER_TOPIC_IDS: $('wxpTopicIds').value.trim(),
+
+      WECHATAPP_CORP_ID: $('wxaCorpId').value.trim(),
+      WECHATAPP_SECRET: $('wxaSecret').value.trim(),
+      WECHATAPP_AGENT_ID: $('wxaAgentId').value.trim(),
+      WECHATAPP_TO_USER: $('wxaToUser').value.trim() || '@all',
+
+      WECHATBOT_WEBHOOK: $('wcWebhook').value.trim(),
+      WECHATBOT_MSG_TYPE: $('wcMsgType').value,
+      WECHATBOT_AT_ALL: $('wcAtAll').checked ? 'true' : 'false',
+      WECHATBOT_AT_MOBILES: $('wcAtMobiles').value.trim(),
+
+      QQ_ONEBOT_URL: $('qqUrl').value.trim(),
+      QQ_ONEBOT_TOKEN: $('qqToken').value.trim(),
+      QQ_TARGET_TYPE: $('qqTargetType').value,
+      QQ_TARGET_ID: $('qqTargetId').value.trim(),
+
+      TIMEZONE: $('timezone').value,
+      NOTIFICATION_HOURS: state.hours,
+      SHOW_LUNAR: $('showLunar').checked,
+      THEME_MODE: $('themeMode').value,
+
+      PAYMENT_HISTORY_LIMIT: Number($('payLimit').value) || 100,
+      THIRD_PARTY_API_TOKEN: $('thirdPartyToken').value.trim(),
+
+      CLEAR_SECRET_FIELDS: state.clearSecrets.slice()
+    };
+
+    if (pwd) payload.ADMIN_PASSWORD = pwd;
+    return payload;
+  }
+
+  async function save(btn) {
+    var original = btn.innerHTML;
+    var payload;
+    try {
+      payload = collect();
+    } catch (err) {
+      toast(err.message, 'err');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 保存中…';
+    try {
+      await api('POST', '/api/config', payload);
+      toast('设置已保存', 'ok');
+      $('adminPassword').value = '';
+      $('adminPassword2').value = '';
+      if (window.DR) window.DR.setTheme(payload.THEME_MODE);
+      await loadConfig();
+    } catch (err) {
+      toast(err.message || '保存失败', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+
+  // ── 渠道测试 ────────────────────────────────────────────────────────
+  async function testChannel(type, btn) {
+    var original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+
+    var body = { type: type };
+    if (type === 'wxpusher') {
+      body.WXPUSHER_APP_TOKEN = $('wxpAppToken').value.trim();
+      body.WXPUSHER_UIDS = $('wxpUids').value.trim();
+      body.WXPUSHER_TOPIC_IDS = $('wxpTopicIds').value.trim();
+    } else if (type === 'wechatapp') {
+      body.WECHATAPP_CORP_ID = $('wxaCorpId').value.trim();
+      body.WECHATAPP_SECRET = $('wxaSecret').value.trim();
+      body.WECHATAPP_AGENT_ID = $('wxaAgentId').value.trim();
+      body.WECHATAPP_TO_USER = $('wxaToUser').value.trim();
+    } else if (type === 'wechatbot') {
+      body.WECHATBOT_WEBHOOK = $('wcWebhook').value.trim();
+      body.WECHATBOT_MSG_TYPE = $('wcMsgType').value;
+      body.WECHATBOT_AT_ALL = $('wcAtAll').checked ? 'true' : 'false';
+      body.WECHATBOT_AT_MOBILES = $('wcAtMobiles').value.trim();
+    } else if (type === 'qq') {
+      body.QQ_ONEBOT_URL = $('qqUrl').value.trim();
+      body.QQ_ONEBOT_TOKEN = $('qqToken').value.trim();
+      body.QQ_TARGET_TYPE = $('qqTargetType').value;
+      body.QQ_TARGET_ID = $('qqTargetId').value.trim();
+    }
+
+    try {
+      var r = await api('POST', '/api/test-notification', body);
+      toast((r && r.message) || (r && r.success ? '发送成功' : '发送失败'), r && r.success ? 'ok' : 'err');
+    } catch (err) {
+      toast(err.message || '测试失败', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  // ── 备份 ────────────────────────────────────────────────────────────
+  async function exportBackup() {
+    try {
+      var res = await fetch('/api/backup?includeSecrets=1', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('导出失败');
+      var blob = await res.blob();
+      var a = document.createElement('a');
+      var stamp = new Date().toISOString().slice(0, 10);
+      a.href = URL.createObjectURL(blob);
+      a.download = 'date-reminder-backup-' + stamp + '.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      toast('备份已下载', 'ok');
+    } catch (err) {
+      toast(err.message || '导出失败', 'err');
+    }
+  }
+
+  function importBackup(file) {
+    var reader = new FileReader();
+    reader.onload = async function () {
+      var backup;
+      try {
+        backup = JSON.parse(reader.result);
+      } catch (e) {
+        toast('文件不是合法的 JSON', 'err');
+        return;
+      }
+      if (!window.confirm('导入会合并备份中的提醒与设置（同一 ID 会被覆盖）。确认继续？')) return;
+      try {
+        var r = await api('POST', '/api/restore', { backup: backup, mode: 'merge' });
+        toast(r && r.message ? r.message : '导入完成', 'ok');
+        await loadConfig();
+      } catch (err) {
+        toast(err.message || '导入失败', 'err');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ── 绑定 ────────────────────────────────────────────────────────────
+  Array.prototype.forEach.call(document.querySelectorAll('.channel-head'), function (head) {
+    head.addEventListener('click', function (e) {
+      if (e.target.closest('.switch')) return;
+      head.parentElement.classList.toggle('open');
+    });
+  });
+
+  $('saveBtn').addEventListener('click', function () { save(this); });
+  $('saveTopBtn').addEventListener('click', function () { save(this); });
+  $('reloadBtn').addEventListener('click', function () { loadConfig(); toast('已还原为已保存的设置', 'info'); });
+
+  document.addEventListener('click', function (e) {
+    var testBtn = e.target.closest('[data-test]');
+    if (testBtn) { testChannel(testBtn.getAttribute('data-test'), testBtn); return; }
+
+    var clearBtn = e.target.closest('.clear-secret');
+    if (clearBtn) {
+      var key = clearBtn.getAttribute('data-key');
+      if (state.clearSecrets.indexOf(key) === -1) state.clearSecrets.push(key);
+      var wrap = clearBtn.parentElement;
+      var input = wrap.querySelector('.input');
+      if (input) { input.value = ''; input.placeholder = '保存后将清除已存储的值'; }
+      toast('保存后会清除该密钥', 'info');
+      return;
+    }
+
+    var hourBtn = e.target.closest('.hour-chip');
+    if (hourBtn) {
+      var h = hourBtn.getAttribute('data-hour');
+      var i = state.hours.indexOf(h);
+      if (i === -1) state.hours.push(h); else state.hours.splice(i, 1);
+      hourBtn.classList.toggle('active');
+      updateHoursSummary();
+      return;
+    }
+  });
+
+  $('hoursAll').addEventListener('click', function () {
+    state.hours = [];
+    renderHours();
+  });
+  $('hoursWork').addEventListener('click', function () {
+    state.hours = [];
+    for (var h = 8; h <= 21; h++) state.hours.push(pad(h));
+    renderHours();
+  });
+  $('hoursNone').addEventListener('click', function () {
+    state.hours = [];
+    renderHours();
+  });
+
+  $('themeMode').addEventListener('change', function (e) {
+    if (window.DR) window.DR.setTheme(e.target.value);
+  });
+
+  $('btnExport').addEventListener('click', exportBackup);
+  $('btnImport').addEventListener('click', function () { $('importFile').click(); });
+  $('importFile').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) importBackup(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  $('btnGenToken').addEventListener('click', function () {
+    var arr = new Uint8Array(24);
+    crypto.getRandomValues(arr);
+    var token = Array.prototype.map.call(arr, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    $('thirdPartyToken').value = token;
+    toast('已生成新令牌，记得保存', 'info');
+  });
+
+  $('showLunar').addEventListener('change', function () { /* 仅标记 */ });
+
+  loadConfig();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通知记录 · Date Reminder</title>
+  ${themeResources}
+  <style>
+    .tabs { display: inline-flex; gap: 4px; border-bottom: 1px solid var(--border); width: 100%; }
+    .tab {
+      border: 0; background: transparent; font-family: inherit; cursor: pointer;
+      padding: 9px 14px; font-size: 13.5px; color: var(--text-3);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 500; }
+    .log-msg { max-width: 420px; color: var(--text-2); font-size: 12.5px; line-height: 1.5; }
+    .log-msg .err { color: var(--danger); }
+    .mono-sm { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Date Reminder</div>
+        <div class="brand-sub">通知记录</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">工作台</div>
+      <a class="nav-item" href="/admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>提醒清单</span>
+      </a>
+      <a class="nav-item" href="/admin/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>总览</span>
+      </a>
+      <a class="nav-item active" href="/admin/notify-logs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span>通知记录</span>
+      </a>
+      <div class="nav-label">设置</div>
+      <a class="nav-item" href="/admin/config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 008.9 19a1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 005 8.9a1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span>系统设置</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="user-avatar">A</div>
+        <div class="user-name grow truncate" id="userName">管理员</div>
+        <a class="link-quiet" href="/api/logout" title="退出登录">退出</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>通知记录</h1>
+        <div class="sub">每次发送与每轮定时检查都有记录，用于排查「为什么没收到」</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn" id="refreshBtn">刷新</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="tabs" style="margin-bottom:16px;">
+        <button class="tab active" data-tab="notify">发送记录</button>
+        <button class="tab" data-tab="scheduler">定时任务日志</button>
+      </div>
+
+      <!-- 发送记录 -->
+      <div id="panelNotify">
+        <div class="card">
+          <div class="card-head" style="flex-wrap:wrap; gap:10px;">
+            <div class="flex gap-8 wrap grow">
+              <select class="select input-sm" id="channelFilter" style="width:150px;">
+                <option value="">全部渠道</option>
+                <option value="wxpusher">微信推送</option>
+                <option value="wechatapp">企业微信应用</option>
+                <option value="wechatbot">企业微信群机器人</option>
+                <option value="qq">QQ</option>
+              </select>
+              <select class="select input-sm" id="statusFilter" style="width:130px;">
+                <option value="">全部状态</option>
+                <option value="success">成功</option>
+                <option value="failed">失败</option>
+              </select>
+              <select class="select input-sm" id="limitFilter" style="width:120px;">
+                <option value="50">最近 50 条</option>
+                <option value="100" selected>最近 100 条</option>
+                <option value="200">最近 200 条</option>
+              </select>
+            </div>
+            <span class="xs muted" id="notifyCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="table responsive">
+              <thead>
+                <tr>
+                  <th style="width:150px;">时间</th>
+                  <th style="width:150px;">渠道</th>
+                  <th style="width:82px;">状态</th>
+                  <th>内容</th>
+                </tr>
+              </thead>
+              <tbody id="notifyBody"></tbody>
+            </table>
+            <div class="empty hidden" id="notifyEmpty">
+              <h4>还没有发送记录</h4>
+              <div class="small">配置好渠道并收到第一条提醒后，这里就会有数据</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 调度日志 -->
+      <div id="panelScheduler" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>每小时执行情况</h3>
+              <div class="desc">整点执行一次。若「是否在时段」为否，说明当前小时被设置排除，不会发送。</div>
+            </div>
+            <span class="xs muted" id="schedCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="table responsive">
+              <thead>
+                <tr>
+                  <th style="width:150px;">执行时间</th>
+                  <th style="width:82px;">结果</th>
+                  <th style="width:96px;">在发送时段</th>
+                  <th style="width:150px;">检查 / 命中 / 发送</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody id="schedBody"></tbody>
+            </table>
+            <div class="empty hidden" id="schedEmpty">
+              <h4>还没有执行记录</h4>
+              <div class="small">部署后每个整点会自动检查一次，稍等片刻再刷新</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CHANNEL_NAMES = {
+    wxpusher: '微信推送',
+    wechatapp: '企业微信应用',
+    wechatbot: '企业微信群机器人',
+    qq: 'QQ'
+  };
+
+  var state = { tab: 'notify', timezone: 'Asia/Shanghai' };
+
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function toast(msg, kind) {
+    var host = $('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (kind || 'info');
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .2s';
+      setTimeout(function () { el.remove(); }, 220);
+    }, 3000);
+  }
+
+  async function api(url) {
+    var res = await fetch(url, { credentials: 'same-origin' });
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 401) { window.location.href = '/'; throw new Error('登录已过期'); }
+    if (!res.ok) throw new Error((data && data.message) || '请求失败');
+    return data;
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    try {
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: state.timezone, month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(d);
+    } catch (e) {
+      return d.toISOString().slice(5, 16).replace('T', ' ');
+    }
+  }
+
+  async function loadNotify() {
+    var params = [];
+    var channel = $('channelFilter').value;
+    var status = $('statusFilter').value;
+    var limit = $('limitFilter').value;
+    if (channel) params.push('channel=' + encodeURIComponent(channel));
+    if (status) params.push('status=' + encodeURIComponent(status));
+    params.push('limit=' + encodeURIComponent(limit));
+
+    try {
+      var r = await api('/api/notification-logs?' + params.join('&'));
+      var logs = (r && r.logs) || [];
+      $('notifyCount').textContent = '共 ' + logs.length + ' 条';
+
+      if (logs.length === 0) {
+        $('notifyBody').innerHTML = '';
+        $('notifyEmpty').classList.remove('hidden');
+        return;
+      }
+      $('notifyEmpty').classList.add('hidden');
+      $('notifyBody').innerHTML = logs.map(function (log) {
+        var ok = log.status === 'success';
+        var channelName = CHANNEL_NAMES[log.channel] || log.channel || '—';
+        var msg = ok
+          ? (log.title ? escapeHtml(log.title) : '发送成功')
+          : '<span class="err">' + escapeHtml(log.error || '发送失败') + '</span>';
+        return '<tr>' +
+          '<td data-label="时间"><span class="mono-sm">' + fmtTime(log.timestamp) + '</span></td>' +
+          '<td data-label="渠道"><span class="badge badge-neutral">' + escapeHtml(channelName) + '</span></td>' +
+          '<td data-label="状态"><span class="badge ' + (ok ? 'badge-ok' : 'badge-danger') + '">' + (ok ? '成功' : '失败') + '</span></td>' +
+          '<td data-label="内容"><div class="log-msg">' + msg + '</div></td>' +
+          '</tr>';
+      }).join('');
+    } catch (err) {
+      toast(err.message || '读取记录失败', 'err');
+    }
+  }
+
+  async function loadScheduler() {
+    try {
+      var r = await api('/api/scheduler-logs?limit=30');
+      var logs = (r && r.logs) || [];
+      $('schedCount').textContent = '共 ' + logs.length + ' 条';
+      if (logs.length === 0) {
+        $('schedBody').innerHTML = '';
+        $('schedEmpty').classList.remove('hidden');
+        return;
+      }
+      $('schedEmpty').classList.add('hidden');
+      $('schedBody').innerHTML = logs.map(function (log) {
+        var ok = log.status === 'ok';
+        var skipped = log.inWindow === false;
+        var badge = ok ? 'badge-ok' : skipped ? 'badge-warn' : 'badge-danger';
+        var label = ok ? '正常' : skipped ? '跳过' : '异常';
+        return '<tr>' +
+          '<td data-label="时间"><span class="mono-sm">' + fmtTime(log.startedAt) + '</span></td>' +
+          '<td data-label="结果"><span class="badge ' + badge + '">' + label + '</span></td>' +
+          '<td data-label="时段">' + (skipped ? '<span class="badge badge-warn">否</span>' : '<span class="badge badge-neutral">是</span>') + '</td>' +
+          '<td data-label="统计"><span class="small">' + (log.checkedCount || 0) + ' / ' + (log.matchedCount || 0) + ' / ' + (log.sentCount || 0) + '</span></td>' +
+          '<td data-label="说明"><span class="xs text-2">' + escapeHtml(log.reason || '—') + '</span></td>' +
+          '</tr>';
+      }).join('');
+    } catch (err) {
+      toast(err.message || '读取日志失败', 'err');
+    }
+  }
+
+  function switchTab(tab) {
+    state.tab = tab;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+      t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+    });
+    $('panelNotify').classList.toggle('hidden', tab !== 'notify');
+    $('panelScheduler').classList.toggle('hidden', tab !== 'scheduler');
+    if (tab === 'notify') loadNotify(); else loadScheduler();
+  }
+
+  document.addEventListener('click', function (e) {
+    var tab = e.target.closest('.tab');
+    if (tab) switchTab(tab.getAttribute('data-tab'));
+  });
+
+  $('channelFilter').addEventListener('change', loadNotify);
+  $('statusFilter').addEventListener('change', loadNotify);
+  $('limitFilter').addEventListener('change', loadNotify);
+  $('refreshBtn').addEventListener('click', function () {
+    if (state.tab === 'notify') loadNotify(); else loadScheduler();
+    toast('已刷新', 'info');
+  });
+
+  async function boot() {
+    try {
+      var cfg = await api('/api/config');
+      if (cfg && cfg.TIMEZONE) state.timezone = cfg.TIMEZONE;
+      if (cfg && cfg.ADMIN_USERNAME) $('userName').textContent = cfg.ADMIN_USERNAME;
+    } catch (e) { /* 忽略 */ }
+    loadNotify();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

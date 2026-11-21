@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>总览 · Date Reminder</title>
+  ${themeResources}
+  <style>
+    .kpi-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; }
+    .kpi-trend.up { color: var(--warn); }
+    .kpi-trend.down { color: var(--ok); }
+    .kpi-trend.flat { color: var(--text-3); }
+    .bar-row { display: grid; grid-template-columns: 92px minmax(0,1fr) 76px; gap: 10px; align-items: center; padding: 7px 0; }
+    .bar-track { height: 7px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: var(--brand); }
+    .bar-fill.alt { background: #6b9bd1; }
+    .bar-name { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-val { font-size: 12px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
+    .kv { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+    .kv:last-child { border-bottom: 0; }
+    .kv .k { color: var(--text-3); }
+    .kv .v { color: var(--text); font-weight: 500; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Date Reminder</div>
+        <div class="brand-sub">总览</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">工作台</div>
+      <a class="nav-item" href="/admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>提醒清单</span>
+      </a>
+      <a class="nav-item active" href="/admin/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>总览</span>
+      </a>
+      <a class="nav-item" href="/admin/notify-logs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span>通知记录</span>
+      </a>
+      <div class="nav-label">设置</div>
+      <a class="nav-item" href="/admin/config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1A1.7 1.7 0 008.9 19a1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1A1.7 1.7 0 005 8.9a1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg><span>系统设置</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="user-avatar">A</div>
+        <div class="user-name grow truncate" id="userName">管理员</div>
+        <a class="link-quiet" href="/api/logout" title="退出登录">退出</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>总览</h1>
+        <div class="sub" id="todayLine">数据每天自动更新</div>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn" href="/admin">查看提醒清单</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="stat-grid" id="kpiGrid">
+        <div class="stat"><div class="label">本月支出</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">今年支出</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">进行中提醒</div><div class="value">—</div></div>
+        <div class="stat"><div class="label">7 天内到期</div><div class="value">—</div></div>
+      </div>
+
+      <div class="grid-2 mt-16" style="align-items:start;">
+        <!-- 即将到期 -->
+        <div class="card" style="margin-top:0;">
+          <div class="card-head">
+            <div><h3>即将到期</h3><div class="desc">未来 7 天内需要处理的提醒</div></div>
+            <span class="badge badge-neutral" id="upcomingCount">0 条</span>
+          </div>
+          <div class="table-wrap">
+            <table class="table responsive">
+              <thead><tr><th>名称</th><th style="width:120px;">日期</th><th style="width:90px;">倒计时</th></tr></thead>
+              <tbody id="upcomingBody"></tbody>
+            </table>
+            <div id="upcomingEmpty" class="empty hidden" style="padding:36px 20px;">
+              <h4>近期没有到期事项</h4>
+              <div class="small">放松一下，或去检查一下提醒设置</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分类支出 -->
+        <div class="card" style="margin-top:0;">
+          <div class="card-head">
+            <div><h3>今年支出分布</h3><div class="desc">按分类统计，单位：人民币</div></div>
+          </div>
+          <div class="card-body" id="categoryBody">
+            <div class="xs muted">暂无支出数据</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2 mt-16" style="align-items:start;">
+        <!-- 调度状态 -->
+        <div class="card" style="margin-top:0;">
+          <div class="card-head">
+            <div><h3>定时任务状态</h3><div class="desc">每小时整点执行一次到期检查</div></div>
+            <span class="badge badge-neutral" id="schedBadge">未知</span>
+          </div>
+          <div class="card-body" id="schedBody">
+            <div class="xs muted">暂无执行记录，部署后等待下一个整点</div>
+          </div>
+        </div>
+
+        <!-- 渠道状态 -->
+        <div class="card" style="margin-top:0;">
+          <div class="card-head">
+            <div><h3>通知渠道</h3><div class="desc">只有启用的渠道才会收到消息</div></div>
+            <a class="btn btn-sm" href="/admin/config">去配置</a>
+          </div>
+          <div class="card-body">
+            <div class="chips" id="channelChips"></div>
+            <div class="callout info mt-16">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <div>在「系统设置」里配置好渠道后，点测试按钮确认手机能收到，再添加正式提醒最稳妥。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CHANNEL_NAMES = {
+    wxpusher: '微信推送',
+    wechatapp: '企业微信应用',
+    wechatbot: '企业微信群机器人',
+    qq: 'QQ'
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  function toast(msg, kind) {
+    var host = $('toastHost');
+    var el = document.createElement('div');
+    el.className = 'toast ' + (kind || 'info');
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .2s';
+      setTimeout(function () { el.remove(); }, 220);
+    }, 3200);
+  }
+
+  async function api(url) {
+    var res = await fetch(url, { credentials: 'same-origin' });
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (res.status === 401) { window.location.href = '/'; throw new Error('登录已过期'); }
+    if (!res.ok) throw new Error((data && data.message) || '请求失败');
+    return data;
+  }
+
+  function money(n) {
+    var v = Number(n || 0);
+    return '¥' + v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function fmtDate(iso, tz) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    try {
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(d).replace(/\//g, '-');
+    } catch (e) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+
+  function fmtTime(iso, tz) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    try {
+      return new Intl.DateTimeFormat('zh-CN', {
+        timeZone: tz, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(d);
+    } catch (e) {
+      return d.toISOString();
+    }
+  }
+
+  function renderKpi(data) {
+    var monthly = data.monthlyExpense || {};
+    var yearly = data.yearlyExpense || {};
+    var active = data.activeSubscriptions || {};
+    var trend = monthly.trend || 0;
+    var dir = monthly.trendDirection || 'flat';
+    var trendHtml = '';
+    if (dir === 'up') trendHtml = '<div class="kpi-trend up">↑ ' + trend + '% 较上月</div>';
+    else if (dir === 'down') trendHtml = '<div class="kpi-trend down">↓ ' + trend + '% 较上月</div>';
+    else trendHtml = '<div class="kpi-trend flat">与上月持平</div>';
+
+    var cells = [
+      '<div class="stat"><div class="label">本月支出</div><div class="value">' + money(monthly.amount) + '</div>' + trendHtml + '</div>',
+      '<div class="stat"><div class="label">今年支出</div><div class="value">' + money(yearly.amount) + '</div>' +
+        '<div class="foot">月均 ' + money(yearly.monthlyAverage) + '</div></div>',
+      '<div class="stat"><div class="label">进行中提醒</div><div class="value">' + (active.active || 0) + '<span class="unit">条</span></div>' +
+        '<div class="foot">共 ' + (active.total || 0) + ' 条，含生日与订阅</div></div>',
+      '<div class="stat' + ((active.expiringSoon || 0) > 0 ? ' accent' : '') + '"><div class="label">7 天内到期</div>' +
+        '<div class="value">' + (active.expiringSoon || 0) + '<span class="unit">条</span></div>' +
+        '<div class="foot">' + ((active.expiringSoon || 0) > 0 ? '建议尽快处理' : '暂无临近事项') + '</div></div>'
+    ];
+    $('kpiGrid').innerHTML = cells.join('');
+  }
+
+  function renderUpcoming(data, tz) {
+    var list = data.upcomingRenewals || [];
+    $('upcomingCount').textContent = list.length + ' 条';
+    var body = $('upcomingBody');
+    if (list.length === 0) {
+      body.innerHTML = '';
+      $('upcomingEmpty').classList.remove('hidden');
+      return;
+    }
+    $('upcomingEmpty').classList.add('hidden');
+    body.innerHTML = list.map(function (item) {
+      var d = Number(item.daysUntilRenewal || 0);
+      var badge = d <= 0 ? 'badge-danger' : d <= 3 ? 'badge-warn' : 'badge-neutral';
+      var text = d <= 0 ? '今天' : d + ' 天';
+      return '<tr>' +
+        '<td data-label="名称"><span class="primary-cell">' + escapeHtml(item.name) + '</span></td>' +
+        '<td data-label="日期"><span class="mono small">' + fmtDate(item.renewalDate, tz) + '</span></td>' +
+        '<td data-label="倒计时"><span class="badge ' + badge + '">' + text + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function escapeHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderCategories(data) {
+    var list = (data.expenseByCategory || []).slice(0, 8);
+    var host = $('categoryBody');
+    if (list.length === 0) {
+      host.innerHTML = '<div class="xs muted">暂无支出数据。给订阅填上金额并续订后，这里会自动统计。</div>';
+      return;
+    }
+    var max = Math.max.apply(null, list.map(function (i) { return i.amount || 0; })) || 1;
+    host.innerHTML = list.map(function (item, idx) {
+      var pct = Math.round(((item.amount || 0) / max) * 100);
+      return '<div class="bar-row">' +
+        '<div class="bar-name" title="' + escapeHtml(item.category) + '">' + escapeHtml(item.category || '未分类') + '</div>' +
+        '<div class="bar-track"><div class="bar-fill' + (idx % 2 ? ' alt' : '') + '" style="width:' + Math.max(pct, 2) + '%"></div></div>' +
+        '<div class="bar-val">' + money(item.amount) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function renderScheduler(data) {
+    var s = data.schedulerStatus;
+    var badge = $('schedBadge');
+    var body = $('schedBody');
+    if (!s) {
+      badge.className = 'badge badge-neutral';
+      badge.textContent = '尚未执行';
+      body.innerHTML = '<div class="xs muted">部署后等待下一个整点执行。也可以在 Cloudflare 后台手动触发 Cron。</div>';
+      return;
+    }
+    var statusOk = s.status === 'ok';
+    var statusSkip = s.status === 'skipped' || s.inWindow === false;
+    badge.className = 'badge ' + (statusOk ? (s.sent ? 'badge-ok' : 'badge-neutral') : statusSkip ? 'badge-warn' : 'badge-danger');
+    badge.textContent = statusOk ? (s.sent ? '已推送' : '正常') : statusSkip ? '已跳过' : '异常';
+
+    var rows = [
+      ['上次执行', fmtTime(s.lastRunAt, s.timezone || data.timezone)],
+      ['时区 / 当时小时', (s.timezone || '—') + ' · ' + (s.currentHour || '—') + ' 点'],
+      ['是否在发送时段', s.inWindow === false ? '否（跳过发送）' : '是'],
+      ['检查提醒数', (s.checkedSubscriptions || 0) + ' 条'],
+      ['命中规则', (s.expiringMatched || 0) + ' 条'],
+      ['实际发送', (s.sentCount != null ? s.sentCount : (s.sent ? 1 : 0)) + ' 条']
+    ];
+    body.innerHTML = rows.map(function (r) {
+      return '<div class="kv"><span class="k">' + r[0] + '</span><span class="v">' + escapeHtml(r[1]) + '</span></div>';
+    }).join('') + (s.reason ? '<div class="callout mt-12"><div>' + escapeHtml(s.reason) + '</div></div>' : '');
+  }
+
+  function renderChannels(config) {
+    var enabled = Array.isArray(config.ENABLED_NOTIFIERS) ? config.ENABLED_NOTIFIERS : [];
+    var host = $('channelChips');
+    var all = Object.keys(CHANNEL_NAMES);
+    host.innerHTML = all.map(function (key) {
+      var on = enabled.indexOf(key) !== -1;
+      return '<span class="badge ' + (on ? 'badge-ok' : 'badge-neutral') + '">' +
+        '<span class="dot"></span>' + CHANNEL_NAMES[key] + (on ? '' : '（未启用）') + '</span>';
+    }).join('');
+  }
+
+  async function load() {
+    try {
+      var results = await Promise.all([api('/api/dashboard/stats'), api('/api/config')]);
+      var payload = results[0];
+      var config = results[1] || {};
+      var data = (payload && payload.data) || {};
+      var tz = data.timezone || config.TIMEZONE || 'Asia/Shanghai';
+
+      if (config.ADMIN_USERNAME) $('userName').textContent = config.ADMIN_USERNAME;
+
+      try {
+        $('todayLine').textContent = new Intl.DateTimeFormat('zh-CN', {
+          timeZone: tz, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+        }).format(new Date()) + ' · ' + tz;
+      } catch (e) { /* 忽略 */ }
+
+      renderKpi(data);
+      renderUpcoming(data, tz);
+      renderCategories(data);
+      renderScheduler(data);
+      renderChannels(config);
+    } catch (err) {
+      toast(err.message || '加载失败', 'err');
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

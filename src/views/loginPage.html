@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Date Reminder · 登录</title>
+  ${themeResources}
+</head>
+<body>
+  <div class="auth">
+    <aside class="auth-aside">
+      <div class="auth-brand">
+        <div class="brand-mark" style="width:38px;height:38px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name" style="font-size:17px;">Date Reminder</div>
+          <div class="brand-sub">Important Dates, On Time</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="auth-title">重要日子，<br>一个都不会忘。</div>
+        <p class="auth-desc">
+          订阅到期、长辈生日、纪念日，统一记录在这里。到点自动推送企业微信、微信与 QQ，
+          农历生日也能准确推算。
+        </p>
+        <div class="auth-features">
+          <div class="auth-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span>农历 / 公历双支持，闰月与大小月自动处理</span>
+          </div>
+          <div class="auth-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span>提前 2 天、1 天、当天上午分时段提醒</span>
+          </div>
+          <div class="auth-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span>企业微信 · 微信 · QQ，三条通道同时送达</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-foot">基于 Cloudflare Workers 部署 · 数据存放在你自己的账号里</div>
+    </aside>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <h2>登录后台</h2>
+        <p class="sub">请输入管理员账号，首次登录后请立即修改默认密码</p>
+
+        <form id="loginForm" class="mt-24" autocomplete="on">
+          <div class="field mb-16">
+            <label class="label" for="username">用户名</label>
+            <input class="input" type="text" id="username" name="username" placeholder="admin" required autocomplete="username">
+          </div>
+
+          <div class="field mb-16">
+            <label class="label" for="password">密码</label>
+            <input class="input" type="password" id="password" name="password" placeholder="请输入密码" required autocomplete="current-password">
+          </div>
+
+          <div id="errorMsg" class="error-text mb-12" style="min-height:18px;"></div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="height:38px;">登录</button>
+
+          <div class="callout warn mt-16">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+            <div>默认账号 <b>admin</b> / <b>password</b>。若你的站点是公开地址，请尽快登录并在「系统设置 → 账号与安全」中修改。</div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    var form = document.getElementById('loginForm');
+    var btn = document.getElementById('submitBtn');
+    var errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      errorMsg.textContent = '';
+
+      if (!username || !password) {
+        errorMsg.textContent = '请输入用户名和密码';
+        return;
+      }
+
+      var original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> 登录中…';
+
+      try {
+        var res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, password: password })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (data && data.success) {
+          window.location.href = '/admin';
+          return;
+        }
+        errorMsg.textContent = (data && data.message) || '用户名或密码错误';
+      } catch (err) {
+        errorMsg.textContent = '网络异常，请稍后重试';
+      }
+      btn.disabled = false;
+      btn.innerHTML = original;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# 本地开发配置：npx wrangler dev --config wrangler.dev.toml
+name = "date-reminder-dev"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS_KV"
+id = "local-dev-kv-placeholder"
+preview_id = "local-dev-kv-preview"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[triggers]
+crons = ["0 * * * *"]
+
+[vars]
+ENVIRONMENT = "development"
