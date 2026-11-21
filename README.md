@@ -88,6 +88,8 @@ npx wrangler dev --config wrangler.dev.toml
 # 打开 http://localhost:8787 ，默认账号 admin / password
 ```
 
+如果熟悉命令行，也可以用 `npm run setup` 自动创建 KV 并把 id 写进 `wrangler.toml`（需先 `npx wrangler login`），再 `npx wrangler deploy` 上线——效果与网页端部署一致。
+
 ## 安全说明
 
 - 通知密钥只存在 Cloudflare KV 里，前端接口返回时会被替换成 `*_CONFIGURED` 标记，不会明文下发。
