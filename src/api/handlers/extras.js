@@ -12,7 +12,7 @@
  *                                                 查询通知日志
  *   GET    /scheduler-logs?limit=N                查询调度执行日志
  *
- * 鉴权：与既有客户端约定一致——需要登录（cookie token），由 router.js 在 routes 之前
+ * 鉴权：与前端页面的约定一致——需要登录（cookie token），由 router.js 在 routes 之前
  * 统一校验。本文件被 router.js 调用，不再单独校验。
  *
  */
@@ -27,7 +27,7 @@ import { nextBirthdaySolarDate } from '../../core/birthday.js';
 import { getConfig } from '../../data/config.js';
 import { getTimezoneDateParts } from '../../core/time.js';
 
-export const VERSION = '4.0.0';
+export const VERSION = '4.1.0';
 
 /** 标准 JSON 响应 */
 function json(data, status = 200) {

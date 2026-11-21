@@ -14,6 +14,8 @@ const SECRET_FIELDS = [
   'WECHATAPP_SECRET',
   'WXPUSHER_APP_TOKEN',
   'QQ_ONEBOT_TOKEN',
+  'TG_BOT_TOKEN',
+  'EMAIL_API_KEY',
   'THIRD_PARTY_API_TOKEN'
 ];
 
@@ -88,7 +90,9 @@ async function handleUpdateConfig(request, env) {
       TIMEZONE: newConfig.TIMEZONE || config.TIMEZONE || 'Asia/Shanghai',
 
       ENABLED_NOTIFIERS: Array.isArray(newConfig.ENABLED_NOTIFIERS)
-        ? newConfig.ENABLED_NOTIFIERS.filter((k) => ['wechatbot', 'wechatapp', 'wxpusher', 'qq'].includes(k))
+        ? [...new Set(newConfig.ENABLED_NOTIFIERS)].filter((k) =>
+            ['wechatbot', 'wechatapp', 'wxpusher', 'qq', 'telegram', 'email'].includes(k)
+          )
         : [],
 
       WECHATBOT_WEBHOOK: mergeSecretField(config, newConfig, 'WECHATBOT_WEBHOOK', clearSecretFields),
@@ -109,6 +113,16 @@ async function handleUpdateConfig(request, env) {
       QQ_ONEBOT_TOKEN: mergeSecretField(config, newConfig, 'QQ_ONEBOT_TOKEN', clearSecretFields),
       QQ_TARGET_TYPE: newConfig.QQ_TARGET_TYPE === 'group' ? 'group' : 'private',
       QQ_TARGET_ID: (newConfig.QQ_TARGET_ID != null ? String(newConfig.QQ_TARGET_ID) : '').trim(),
+
+      TG_BOT_TOKEN: mergeSecretField(config, newConfig, 'TG_BOT_TOKEN', clearSecretFields),
+      TG_CHAT_ID: (newConfig.TG_CHAT_ID != null ? String(newConfig.TG_CHAT_ID) : '').trim(),
+      TG_TOPIC_ID: (newConfig.TG_TOPIC_ID != null ? String(newConfig.TG_TOPIC_ID) : '').trim(),
+
+      EMAIL_PROVIDER: newConfig.EMAIL_PROVIDER === 'brevo' ? 'brevo' : 'resend',
+      EMAIL_API_KEY: mergeSecretField(config, newConfig, 'EMAIL_API_KEY', clearSecretFields),
+      EMAIL_FROM: (newConfig.EMAIL_FROM || '').trim(),
+      EMAIL_FROM_NAME: (newConfig.EMAIL_FROM_NAME || '').trim(),
+      EMAIL_TO: (newConfig.EMAIL_TO || '').trim(),
 
       THIRD_PARTY_API_TOKEN: mergeSecretField(config, newConfig, 'THIRD_PARTY_API_TOKEN', clearSecretFields),
       DEBUG_LOGS: newConfig.DEBUG_LOGS === true,

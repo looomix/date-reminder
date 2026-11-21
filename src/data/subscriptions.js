@@ -1,17 +1,17 @@
-// 注：本文件暂不启用 // @ts-check，因 lunar 库返回类型分支较多，类型清理推迟到后续 Task。
+// 注：本文件暂不启用 // @ts-check（农历库的返回类型分支较多）。
 /**
  * 订阅业务层
  *
  * 本文件负责"订阅生命周期"相关的业务规则（创建时自动推算到期日、续订生成支付记录、
  * 删除支付记录回退周期、农历周期推算、初始支付记录等）。
  *
- * 重构：
- * - 数据存储从单 Key 数组改为 sub:{id} 多 Key（见 subscriptions.repo.js）
+ * 存储结构：
+ * - 每个订阅单独一个 KV Key：sub:{id}（见 subscriptions.repo.js）
  * - 单条读写通过 repo.getById / repo.save，不再加载整个数组，降低并发风险
- * - 业务逻辑保持兼容，外部 API 签名不变
+ * - 提醒规则存在 reminder_rules:{id}，由 reminders.repo.js 维护
  *
- * 注意：reminderUnit/reminderValue 字段保留兼容，Task 8 会在新 API 引入
- * 多提醒规则（reminder_rules:{id}），届时 Service 层会同步两边。
+ * 注意：reminderUnit / reminderValue 是旧字段，保留只为兼容历史数据，
+ * 新逻辑请统一走 reminder_rules。
  */
 
 import { getConfig } from './config.js';

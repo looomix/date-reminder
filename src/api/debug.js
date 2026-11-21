@@ -81,7 +81,7 @@ async function handleDebug(request, env) {
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>调试信息 - SubsTracker</title>
+  <title>调试信息 - Date Reminder</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace; padding: 20px; background: #f5f5f5; color: #333; }
     h1 { font-size: 22px; }

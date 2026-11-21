@@ -13,6 +13,8 @@ import { wecomChannel } from './wechat.js';
 import { wechatAppChannel } from './wechatapp.js';
 import { wxpusherChannel } from './wxpusher.js';
 import { qqChannel } from './qq.js';
+import { telegramChannel } from './telegram.js';
+import { emailChannel } from './email.js';
 import { writeLog } from '../../data/notification-logs.repo.js';
 
 /** 名字到渠道实例的映射；新增渠道在此注册即可 */
@@ -20,7 +22,9 @@ export const ALL_CHANNELS = {
   wechatbot: wecomChannel,   // 企业微信群机器人
   wechatapp: wechatAppChannel, // 企业微信应用消息（可进微信）
   wxpusher: wxpusherChannel, // 微信推送
-  qq: qqChannel              // QQ（OneBot）
+  qq: qqChannel,             // QQ（OneBot）
+  telegram: telegramChannel, // Telegram 机器人
+  email: emailChannel        // 邮件（Resend / Brevo）
 };
 
 /**
@@ -50,7 +54,8 @@ export async function dispatch(payload, config, options = {}) {
   const enabled = Array.isArray(config.ENABLED_NOTIFIERS) ? config.ENABLED_NOTIFIERS : [];
   const prefix = options.logPrefix || '[notify]';
 
-  const channels = enabled
+  // 去重：同一条通知不能因为配置里重复写了两遍就发两次
+  const channels = [...new Set(enabled)]
     .map((name) => ALL_CHANNELS[name])
     .filter((ch) => ch != null);
 

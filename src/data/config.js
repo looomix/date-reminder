@@ -45,6 +45,18 @@ const DEFAULT_CONFIG = {
   QQ_TARGET_TYPE: 'private',
   QQ_TARGET_ID: '',
 
+  // ⑤ Telegram 机器人
+  TG_BOT_TOKEN: '',
+  TG_CHAT_ID: '',
+  TG_TOPIC_ID: '',
+
+  // ⑥ 邮件（Resend / Brevo）
+  EMAIL_PROVIDER: 'resend',
+  EMAIL_API_KEY: '',
+  EMAIL_FROM: '',
+  EMAIL_FROM_NAME: '',
+  EMAIL_TO: '',
+
   // 其它
   THIRD_PARTY_API_TOKEN: '',
   DEBUG_LOGS: false,

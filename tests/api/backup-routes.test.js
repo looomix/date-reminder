@@ -67,7 +67,7 @@ describe('GET /api/backup', () => {
     const res = await app.request('/api/backup', { headers: { Cookie: cookie } }, env);
     expect(res.status).toBe(200);
     const backup = await res.json();
-    expect(backup.format).toBe('substracker-backup');
+    expect(backup.format).toBe('date-reminder-backup');
     expect(backup.includeSecrets).toBe(false);
     expect(backup.config.WXPUSHER_APP_TOKEN).toBe('');
     expect(backup.config.JWT_SECRET).toBeUndefined();
@@ -101,7 +101,7 @@ describe('POST /api/restore', () => {
     });
 
     const backup = {
-      format: 'substracker-backup',
+      format: 'date-reminder-backup',
       version: 1,
       config: { TIMEZONE: 'Asia/Tokyo', WXPUSHER_UIDS: 'UID_999' },
       categories: ['工具'],
@@ -157,7 +157,7 @@ describe('POST /api/restore', () => {
     ]);
 
     const backup = {
-      format: 'substracker-backup',
+      format: 'date-reminder-backup',
       version: 1,
       subscriptions: [
         { id: 'only', name: 'Only', expiryDate: '2026-12-01T00:00:00.000Z', isActive: true }

@@ -4,18 +4,20 @@ import { sendWechatBotNotification } from '../../services/notify/wechat.js';
 import { sendWechatAppNotification } from '../../services/notify/wechatapp.js';
 import { sendWxPusherNotification } from '../../services/notify/wxpusher.js';
 import { sendQQNotification } from '../../services/notify/qq.js';
+import { telegramChannel } from '../../services/notify/telegram.js';
+import { emailChannel } from '../../services/notify/email.js';
 
 /**
  * 渠道测试接口
  *
  * POST /api/test-notification
- * body: { type: 'wechatbot' | 'wechatapp' | 'wxpusher' | 'qq', ...该渠道字段 }
+ * body: { type: 'wechatbot' | 'wechatapp' | 'wxpusher' | 'qq' | 'telegram' | 'email', ...该渠道字段 }
  *
  * 前端会把表单里「当前输入但尚未保存」的值一起带上来，因此这里优先用
  * body 里的值，缺失时回落到已保存的配置——这样用户点「测试」不必先保存。
  */
 
-const SUPPORTED = ['wechatbot', 'wechatapp', 'wxpusher', 'qq'];
+const SUPPORTED = ['wechatbot', 'wechatapp', 'wxpusher', 'qq', 'telegram', 'email'];
 
 /** 取 body 里的非空字符串，否则回落配置值 */
 function pick(body, config, key) {
@@ -113,6 +115,44 @@ async function handleTestNotification(request, env) {
         testConfig
       );
       message = success ? 'QQ 消息发送成功' : '发送失败，请检查 OneBot 地址 / Token / QQ 号或群号';
+    } else if (type === 'telegram') {
+      testConfig = {
+        ...config,
+        TG_BOT_TOKEN: pick(body, config, 'TG_BOT_TOKEN'),
+        TG_CHAT_ID: pick(body, config, 'TG_CHAT_ID'),
+        TG_TOPIC_ID: typeof body.TG_TOPIC_ID === 'string' ? body.TG_TOPIC_ID.trim() : config.TG_TOPIC_ID
+      };
+      const tgResult = await telegramChannel.send(
+        {
+          title,
+          content: '这是一条测试消息，用于验证「Telegram」是否配置正确。' + stamp
+        },
+        testConfig
+      );
+      success = tgResult.success;
+      message = success
+        ? 'Telegram 消息发送成功'
+        : '发送失败：' + (tgResult.error || '请检查 Bot Token 与 Chat ID');
+    } else if (type === 'email') {
+      testConfig = {
+        ...config,
+        EMAIL_PROVIDER: body.EMAIL_PROVIDER === 'brevo' ? 'brevo' : (config.EMAIL_PROVIDER || 'resend'),
+        EMAIL_API_KEY: pick(body, config, 'EMAIL_API_KEY'),
+        EMAIL_FROM: pick(body, config, 'EMAIL_FROM'),
+        EMAIL_FROM_NAME: typeof body.EMAIL_FROM_NAME === 'string' ? body.EMAIL_FROM_NAME.trim() : config.EMAIL_FROM_NAME,
+        EMAIL_TO: pick(body, config, 'EMAIL_TO')
+      };
+      const mailResult = await emailChannel.send(
+        {
+          title,
+          content: '这是一封测试邮件，用于验证「邮件提醒」是否配置正确。' + stamp
+        },
+        testConfig
+      );
+      success = mailResult.success;
+      message = success
+        ? '测试邮件已发出，请查收（也看一下垃圾箱）'
+        : '发送失败：' + (mailResult.error || '请检查 API Key 与发件邮箱');
     }
 
     return json({ success, message });

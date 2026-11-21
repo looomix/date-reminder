@@ -18,8 +18,18 @@ import { putKVJson } from '../../data/kv.js';
 import { SECRET_FIELDS } from './config.js';
 import { VERSION } from './extras.js';
 
-const BACKUP_FORMAT = 'substracker-backup';
+const BACKUP_FORMAT = 'date-reminder-backup';
 const BACKUP_VERSION = 1;
+
+/**
+ * 备份文件的 format 只做宽松校验：以 backup 结尾即视为本应用导出的文件。
+ * 这样早期版本导出的备份（format 名字不同）也能正常导入。
+ * @param {any} format
+ */
+function isSupportedBackupFormat(format) {
+  if (!format) return true;
+  return /backup$/i.test(String(format));
+}
 
 /** 永不导出/覆盖的字段 */
 const NEVER_EXPORT_FIELDS = ['JWT_SECRET', 'ADMIN_PASSWORD'];
@@ -107,7 +117,7 @@ export async function handleExportBackup(request, env) {
       status: 200,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Content-Disposition': `attachment; filename="substracker-backup-${new Date()
+        'Content-Disposition': `attachment; filename="date-reminder-backup-${new Date()
           .toISOString()
           .slice(0, 10)}.json"`
       }
@@ -151,8 +161,8 @@ function validateBackup(raw) {
   if (!raw || typeof raw !== 'object') {
     return { ok: false, message: '备份内容不是有效 JSON 对象' };
   }
-  if (raw.format && raw.format !== BACKUP_FORMAT) {
-    return { ok: false, message: `不支持的备份格式: ${raw.format}` };
+  if (!isSupportedBackupFormat(raw.format)) {
+    return { ok: false, message: '这不是本应用导出的备份文件' };
   }
   if (raw.version != null && Number(raw.version) > BACKUP_VERSION) {
     return { ok: false, message: `备份版本过高 (${raw.version})，请升级应用后再导入` };

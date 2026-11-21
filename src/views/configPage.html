@@ -278,6 +278,100 @@
             </div>
           </div>
 
+          <!-- Telegram -->
+          <div class="channel" data-channel="telegram">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 3.5L2.8 10.3c-1 .4-1 1 .1 1.3l4.7 1.4 1.8 5.4c.2.6.6.8 1.2.3l2.6-1.9 4.9 3.6c.6.4 1.2.2 1.4-.6l2.9-14c.2-1-.4-1.4-1-1.1z"/><path d="M7.6 13l9.5-6.3-7.7 7.9"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">Telegram <span class="badge badge-ok ch-state" id="state-telegram" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">通过 Bot 发到 Telegram 私聊、群或频道 · 免费无限量</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="telegram"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">Bot Token <span class="req">*</span></label>
+                <div class="secret-row">
+                  <input class="input" id="tgToken" placeholder="123456789:AAHxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="TG_BOT_TOKEN">清除</button>
+                </div>
+
+                <label class="label">Chat ID <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="tgChatId" placeholder="你的用户 ID（如 87654321）或群 ID（如 -1001234567890）">
+                  <div class="help">在 Telegram 里搜 <b>@userinfobot</b> 发一句话，它会回你的 ID；群 ID 是负数，把机器人拉进群后从 <b>@getidsbot</b> 获取。</div>
+                </div>
+
+                <label class="label">话题 ID</label>
+                <div>
+                  <input class="input" id="tgTopicId" placeholder="选填，群里开了「话题」才需要">
+                  <div class="help">发到某个话题时填数字编号；普通私聊或群留空即可。</div>
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">提示：先在 Telegram 里给机器人发一句 /start，否则机器人无法主动私聊你。</div>
+                <button class="btn btn-sm" data-test="telegram">发送测试</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 邮件 -->
+          <div class="channel" data-channel="email">
+            <div class="channel-head">
+              <div class="channel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+              </div>
+              <div class="grow">
+                <div class="channel-name">邮件 <span class="badge badge-ok ch-state" id="state-email" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">发到邮箱，可抄送多人 · 支持 Resend / Brevo 两家</div>
+              </div>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="email"><span class="track"></span></label>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="channel-body">
+              <div class="cfg-grid">
+                <label class="label">服务商</label>
+                <div>
+                  <select class="select" id="emailProvider" style="max-width:260px;">
+                    <option value="resend">Resend（默认，注册简单）</option>
+                    <option value="brevo">Brevo（每天 300 封）</option>
+                  </select>
+                  <div class="help">两家都只要一个 API Key，不用自己买域名。</div>
+                </div>
+
+                <label class="label">API Key <span class="req">*</span></label>
+                <div class="secret-row">
+                  <input class="input" id="emailApiKey" placeholder="re_xxxxxxxxxxxx 或 xkeysib-xxxxxxxx" autocomplete="off">
+                  <button type="button" class="btn btn-sm clear-secret" data-key="EMAIL_API_KEY">清除</button>
+                </div>
+
+                <label class="label">发件邮箱 <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="emailFrom" placeholder="onboarding@resend.dev">
+                  <div class="help">Resend 可先用 <b>onboarding@resend.dev</b> 发给你注册时那个邮箱；Brevo 需在后台「发件人」里先验证该邮箱。</div>
+                </div>
+
+                <label class="label">发件人名称</label>
+                <div>
+                  <input class="input" id="emailFromName" placeholder="选填，例如 家庭提醒">
+                </div>
+
+                <label class="label">收件邮箱 <span class="req">*</span></label>
+                <div>
+                  <input class="input" id="emailTo" placeholder="me@example.com，多个用英文逗号分隔">
+                  <div class="help">可以用 QQ 邮箱、163、Gmail 等任意邮箱。</div>
+                </div>
+              </div>
+              <div class="flex between center mt-16">
+                <div class="xs muted">邮件里是排版好的 HTML，手机上直接可读。</div>
+                <button class="btn btn-sm" data-test="email">发送测试</button>
+              </div>
+            </div>
+          </div>
+
           <div class="callout warn mt-16">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
             <div>密钥类字段保存后会隐藏。再次保存时<b>留空表示不修改</b>，要彻底删除请点「清除」后再保存。</div>
@@ -492,7 +586,9 @@
       wxpusher: cfg.WXPUSHER_APP_TOKEN_CONFIGURED && cfg.WXPUSHER_UIDS,
       wechatapp: cfg.WECHATAPP_CORP_ID && cfg.WECHATAPP_SECRET_CONFIGURED && cfg.WECHATAPP_AGENT_ID,
       wechatbot: cfg.WECHATBOT_WEBHOOK_CONFIGURED,
-      qq: cfg.QQ_ONEBOT_URL && cfg.QQ_TARGET_ID
+      qq: cfg.QQ_ONEBOT_URL && cfg.QQ_TARGET_ID,
+      telegram: cfg.TG_BOT_TOKEN_CONFIGURED && cfg.TG_CHAT_ID,
+      email: cfg.EMAIL_API_KEY_CONFIGURED && cfg.EMAIL_FROM && cfg.EMAIL_TO
     };
     Object.keys(map).forEach(function (k) {
       var el = $('state-' + k);
@@ -539,6 +635,18 @@
     setSecretField('qqToken', cfg, 'QQ_ONEBOT_TOKEN', 'Token');
     $('qqTargetType').value = cfg.QQ_TARGET_TYPE === 'group' ? 'group' : 'private';
     $('qqTargetId').value = cfg.QQ_TARGET_ID || '';
+
+    // Telegram
+    setSecretField('tgToken', cfg, 'TG_BOT_TOKEN', 'Token');
+    $('tgChatId').value = cfg.TG_CHAT_ID || '';
+    $('tgTopicId').value = cfg.TG_TOPIC_ID || '';
+
+    // 邮件
+    $('emailProvider').value = cfg.EMAIL_PROVIDER === 'brevo' ? 'brevo' : 'resend';
+    setSecretField('emailApiKey', cfg, 'EMAIL_API_KEY', 'API Key');
+    $('emailFrom').value = cfg.EMAIL_FROM || '';
+    $('emailFromName').value = cfg.EMAIL_FROM_NAME || '';
+    $('emailTo').value = cfg.EMAIL_TO || '';
 
     // 策略
     var tzSelect = $('timezone');
@@ -609,6 +717,16 @@
       QQ_TARGET_TYPE: $('qqTargetType').value,
       QQ_TARGET_ID: $('qqTargetId').value.trim(),
 
+      TG_BOT_TOKEN: $('tgToken').value.trim(),
+      TG_CHAT_ID: $('tgChatId').value.trim(),
+      TG_TOPIC_ID: $('tgTopicId').value.trim(),
+
+      EMAIL_PROVIDER: $('emailProvider').value,
+      EMAIL_API_KEY: $('emailApiKey').value.trim(),
+      EMAIL_FROM: $('emailFrom').value.trim(),
+      EMAIL_FROM_NAME: $('emailFromName').value.trim(),
+      EMAIL_TO: $('emailTo').value.trim(),
+
       TIMEZONE: $('timezone').value,
       NOTIFICATION_HOURS: state.hours,
       SHOW_LUNAR: $('showLunar').checked,
@@ -677,6 +795,16 @@
       body.QQ_ONEBOT_TOKEN = $('qqToken').value.trim();
       body.QQ_TARGET_TYPE = $('qqTargetType').value;
       body.QQ_TARGET_ID = $('qqTargetId').value.trim();
+    } else if (type === 'telegram') {
+      body.TG_BOT_TOKEN = $('tgToken').value.trim();
+      body.TG_CHAT_ID = $('tgChatId').value.trim();
+      body.TG_TOPIC_ID = $('tgTopicId').value.trim();
+    } else if (type === 'email') {
+      body.EMAIL_PROVIDER = $('emailProvider').value;
+      body.EMAIL_API_KEY = $('emailApiKey').value.trim();
+      body.EMAIL_FROM = $('emailFrom').value.trim();
+      body.EMAIL_FROM_NAME = $('emailFromName').value.trim();
+      body.EMAIL_TO = $('emailTo').value.trim();
     }
 
     try {

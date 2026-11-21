@@ -1,7 +1,7 @@
 {
   "name": "date-reminder",
-  "version": "4.0.0",
-  "description": "Date Reminder — 订阅与生日提醒（农历 / 公历），支持企业微信、微信、QQ 推送",
+  "version": "4.1.0",
+  "description": "Date Reminder — 订阅、生日与纪念日提醒（支持农历），可推到微信 / 企业微信 / QQ / 邮件 / Telegram",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -30,7 +30,10 @@
     "lunar-calendar",
     "wecom",
     "wechat",
-    "qq"
+    "qq",
+    "telegram",
+    "email",
+    "resend"
   ],
   "license": "MIT"
 }
