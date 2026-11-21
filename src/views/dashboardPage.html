@@ -297,8 +297,8 @@
       ['上次执行', fmtTime(s.lastRunAt, s.timezone || data.timezone)],
       ['时区 / 当时小时', (s.timezone || '—') + ' · ' + (s.currentHour || '—') + ' 点'],
       ['是否在发送时段', s.inWindow === false ? '否（跳过发送）' : '是'],
-      ['检查提醒数', (s.checkedSubscriptions || 0) + ' 条'],
-      ['命中规则', (s.expiringMatched || 0) + ' 条'],
+      ['检查提醒数', (s.checkedSubscriptions != null ? s.checkedSubscriptions : (s.checkedCount || 0)) + ' 条'],
+      ['命中规则', (s.expiringMatched != null ? s.expiringMatched : (s.matchedCount || 0)) + ' 条'],
       ['实际发送', (s.sentCount != null ? s.sentCount : (s.sent ? 1 : 0)) + ' 条']
     ];
     body.innerHTML = rows.map(function (r) {

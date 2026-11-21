@@ -19,4 +19,9 @@ describe('admin page', () => {
     expect(adminPage).toContain('btnPresetBirth');
     expect(adminPage).toMatch(/newRule\('before_expiry', 2, 'days'/);
   });
+
+  it('「不限时间 / 限定时段」在 change 事件里切换（click 拿不到选完后的值）', () => {
+    expect(adminPage).toContain("classList.contains('r-winmode')");
+    expect(adminPage).not.toContain("closest('.r-winmode')");
+  });
 });

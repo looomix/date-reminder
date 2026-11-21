@@ -88,6 +88,7 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
+  overflow-x: hidden;
   font-family: var(--font);
   font-size: 14px;
   line-height: 1.55;
@@ -372,7 +373,7 @@ html[data-theme="dark"] .textarea:focus { box-shadow: 0 0 0 3px rgba(74, 139, 21
 
 /* 分段选择 */
 .segmented {
-  display: inline-flex; padding: 3px; gap: 2px;
+  display: inline-flex; align-self: flex-start; max-width: 100%; padding: 3px; gap: 2px;
   background: var(--surface-3);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -535,6 +536,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .rule-row .w-unit { width: 76px; }
 .rule-row .w-type { width: 120px; }
 .rule-sep { color: var(--text-3); font-size: 12px; }
+/* 时段下拉显式定宽，避免按内容收缩后把「08:00」裁掉 */
+.rule-row .win-range { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.rule-row .win-range .select { width: 84px; flex: 0 0 auto; padding-right: 22px; }
 .window-pill {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--brand-soft);
@@ -681,6 +685,27 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   .stat { padding: 13px 14px; }
   .stat .value { font-size: 20px; }
 
+  /* 顶栏改为上下两行，避免标题和按钮互相挤压 */
+  .topbar { flex-wrap: wrap; row-gap: 10px; }
+  .topbar > div:first-child { flex: 1 1 100%; min-width: 0; }
+  .topbar .sub { display: none; }
+  .topbar-actions { width: 100%; flex: 0 0 100%; }
+  .topbar-actions > .btn { flex: 1 1 0; }
+  .topbar-actions > a.btn { flex: 1 1 0; }
+
+  /* 列表筛选器在窄屏下纵向铺满 */
+  .card-head { align-items: stretch; }
+  .card-head > .flex { width: 100%; }
+  .card-head .input, .card-head .select { width: 100% !important; }
+  .card-head > .xs { text-align: left; }
+
+  /* 卡片化表格不再撑宽页面 */
+  table.table.responsive tbody td { min-width: 0; }
+  .cell-name { min-width: 0; }
+  .cell-name .title { overflow-wrap: anywhere; }
+  .segmented { width: 100%; }
+  .segmented button { flex: 1 1 0; padding: 6px 6px; }
+
   /* 表格转卡片 */
   table.table.responsive thead { display: none; }
   table.table.responsive tbody tr {
@@ -704,7 +729,11 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     text-align: left;
     flex: 0 0 auto;
   }
-  table.table.responsive tbody td:first-child { border-bottom: 1px solid var(--border); }
+  table.table.responsive tbody td:first-child {
+    border-bottom: 1px solid var(--border);
+    flex-direction: column; align-items: flex-start; text-align: left; gap: 5px;
+  }
+  table.table.responsive tbody td:first-child .cell-name { align-items: flex-start; }
   table.table.responsive tbody td[data-label=""]::before { content: none; }
   table.table.responsive .actions { justify-content: flex-end; }
 }

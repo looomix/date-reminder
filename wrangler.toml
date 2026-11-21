@@ -16,7 +16,7 @@ binding = "ASSETS"
 # 数据存储：提醒、规则、日志、配置全部存在这个 KV 里
 [[kv_namespaces]]
 binding = "SUBSCRIPTIONS_KV"
-id = "REPLACE_WITH_YOUR_KV_ID"
+id = "af5ea533a8d84e1daa031b1236f0aec1"
 
 # 每小时整点执行一次到期检查（UTC 时间，按配置里的时区换算）
 [triggers]

@@ -111,7 +111,7 @@ describe('POST /api/config', () => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({ ENABLED_NOTIFIERS: ['wechatbot', 'telegram', 'qq'] })
+        body: JSON.stringify({ ENABLED_NOTIFIERS: ['wechatbot', 'sms', 'qq'] })
       },
       env
     );
@@ -143,7 +143,7 @@ describe('POST /api/test-notification (微信推送)', () => {
     const response = await app.request('/api/test-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: cookie },
-      body: JSON.stringify({ type: 'telegram' })
+      body: JSON.stringify({ type: 'sms' })
     }, env);
     expect(response.status).toBe(400);
   });

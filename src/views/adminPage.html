@@ -36,7 +36,7 @@
     }
     .preview-box svg { width: 15px; height: 15px; flex: 0 0 auto; }
     .win-range { display: inline-flex; align-items: center; gap: 4px; }
-    .win-range .select { width: 68px; }
+    .win-range .select { width: 80px; }
     .select-plain { min-width: 110px; }
     #ruleList .rule-row .select, #ruleList .rule-row .input { background: var(--surface); }
     .empty-cta { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
@@ -762,7 +762,6 @@
           '<option value="after_expiry"' + (r.type === 'after_expiry' ? ' selected' : '') + '>到期后重复</option>' +
         '</select>' +
         valuePart + afterPart +
-        '<span class="rule-sep">·</span>' +
         '<select class="select r-winmode" style="width:96px;">' +
           '<option value="any"' + (!win ? ' selected' : '') + '>不限时间</option>' +
           '<option value="range"' + (win ? ' selected' : '') + '>限定时段</option>' +
@@ -1162,21 +1161,25 @@
         renderRules();
         return;
       }
-      var winMode = e.target.closest('.r-winmode');
-      if (winMode) {
-        var wrap = winMode.parentElement.querySelector('.win-range');
-        if (wrap) wrap.style.display = winMode.value === 'range' ? '' : 'none';
-      }
     });
 
     $('ruleList').addEventListener('change', function (e) {
-      if (e.target.classList.contains('r-type')) {
+      if (e.target.classList.contains('r-winmode')) {
+        // 「不限时间 / 限定时段」切换：change 事件才会在选完后触发
+        var wrap = e.target.parentElement.querySelector('.win-range');
+        if (wrap) wrap.style.display = e.target.value === 'range' ? '' : 'none';
+        syncRules();
+      } else if (e.target.classList.contains('r-h1') || e.target.classList.contains('r-h2')) {
+        syncRules();
+      } else if (e.target.classList.contains('r-type')) {
         syncRules();
         renderRules();
       } else if (e.target.classList.contains('r-on')) {
         syncRules();
         var row = e.target.closest('.rule-row');
         row.classList.toggle('off', !e.target.checked);
+      } else {
+        syncRules();
       }
     });
 
