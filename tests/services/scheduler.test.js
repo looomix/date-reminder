@@ -28,11 +28,10 @@ async function setConfig(cfg) {
   await env.SUBSCRIPTIONS_KV.put('config', JSON.stringify(cfg));
 }
 
-/** mock fetch 返回 Telegram 成功 */
+/** mock fetch 返回 PushPlus 成功 */
 function mockChannelOk() {
-  // 微信推送（WxPusher）成功响应
   return vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify({ code: 1000, msg: '处理成功', data: [] }), {
+    new Response(JSON.stringify({ code: 200, msg: '请求成功', data: 'seq' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
@@ -61,9 +60,8 @@ describe('调度器 - 时区 + 通知时段', () => {
       JWT_SECRET: 'secret',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: ['08'],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
 
     // 一条订阅，5 月 31 日北京时间到期，距今 7 天
@@ -102,9 +100,8 @@ describe('调度器 - 时区 + 通知时段', () => {
       JWT_SECRET: 's',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: ['00'], // 用户配的是北京 0 点
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
     await subRepo.save(env, {
       id: 's-x',
@@ -133,9 +130,8 @@ describe('调度器 - 时区 + 通知时段', () => {
       JWT_SECRET: 's',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: [],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
     await subRepo.save(env, {
       id: 's-multi',
@@ -171,9 +167,8 @@ describe('调度器 - 时区 + 通知时段', () => {
       JWT_SECRET: 's',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: [],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
     await subRepo.save(env, {
       id: 's-dedupe',
@@ -207,9 +202,8 @@ describe('调度器 - 时区 + 通知时段', () => {
       JWT_SECRET: 's',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: ['*'],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
     await subRepo.save(env, {
       id: 's-wc',
@@ -307,9 +301,8 @@ describe('调度器 - 写入日志', () => {
       JWT_SECRET: 's',
       TIMEZONE: 'Asia/Shanghai',
       NOTIFICATION_HOURS: [],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_test',
-      WXPUSHER_UIDS: 'UID_test'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-test-token'
     });
     await subRepo.save(env, {
       id: 's-log',
@@ -327,7 +320,7 @@ describe('调度器 - 写入日志', () => {
 
     const notifyLogs = await queryNotifyLogs(env, { subId: 's-log' });
     expect(notifyLogs).toHaveLength(1);
-    expect(notifyLogs[0].channel).toBe('wxpusher');
+    expect(notifyLogs[0].channel).toBe('pushplus');
     expect(notifyLogs[0].status).toBe('success');
   });
 });

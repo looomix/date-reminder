@@ -25,9 +25,8 @@ async function loginCookie() {
       JWT_SECRET: 'k',
       TIMEZONE: 'UTC',
       NOTIFICATION_HOURS: [],
-      ENABLED_NOTIFIERS: ['wxpusher'],
-      WXPUSHER_APP_TOKEN: 'AT_x',
-      WXPUSHER_UIDS: 'UID_x'
+      ENABLED_NOTIFIERS: ['pushplus'],
+      PUSHPLUS_TOKEN: 'pp-token'
     })
   );
   const res = await app.request(

@@ -11,9 +11,7 @@ import { generateRandomSecret, sanitizeNotificationHours } from '../utils.js';
 // 这些字段含密钥/令牌，绝不下发到浏览器
 const SECRET_FIELDS = [
   'WECHATBOT_WEBHOOK',
-  'WECHATAPP_SECRET',
-  'WXPUSHER_APP_TOKEN',
-  'QQ_ONEBOT_TOKEN',
+  'PUSHPLUS_TOKEN',
   'TG_BOT_TOKEN',
   'EMAIL_API_KEY',
   'SMTP_PASS',
@@ -92,7 +90,7 @@ async function handleUpdateConfig(request, env) {
 
       ENABLED_NOTIFIERS: Array.isArray(newConfig.ENABLED_NOTIFIERS)
         ? [...new Set(newConfig.ENABLED_NOTIFIERS)].filter((k) =>
-            ['wechatbot', 'wechatapp', 'wxpusher', 'qq', 'telegram', 'email'].includes(k)
+            ['wechatbot', 'pushplus', 'pushplusqq', 'telegram', 'email'].includes(k)
           )
         : [],
 
@@ -101,19 +99,9 @@ async function handleUpdateConfig(request, env) {
       WECHATBOT_AT_MOBILES: (newConfig.WECHATBOT_AT_MOBILES || '').trim(),
       WECHATBOT_AT_ALL: newConfig.WECHATBOT_AT_ALL === 'true' ? 'true' : 'false',
 
-      WECHATAPP_CORP_ID: (newConfig.WECHATAPP_CORP_ID || '').trim(),
-      WECHATAPP_SECRET: mergeSecretField(config, newConfig, 'WECHATAPP_SECRET', clearSecretFields),
-      WECHATAPP_AGENT_ID: (newConfig.WECHATAPP_AGENT_ID != null ? String(newConfig.WECHATAPP_AGENT_ID) : '').trim(),
-      WECHATAPP_TO_USER: (newConfig.WECHATAPP_TO_USER || '@all').trim() || '@all',
-
-      WXPUSHER_APP_TOKEN: mergeSecretField(config, newConfig, 'WXPUSHER_APP_TOKEN', clearSecretFields),
-      WXPUSHER_UIDS: (newConfig.WXPUSHER_UIDS || '').trim(),
-      WXPUSHER_TOPIC_IDS: (newConfig.WXPUSHER_TOPIC_IDS || '').trim(),
-
-      QQ_ONEBOT_URL: (newConfig.QQ_ONEBOT_URL || '').trim().replace(/\/+$/, ''),
-      QQ_ONEBOT_TOKEN: mergeSecretField(config, newConfig, 'QQ_ONEBOT_TOKEN', clearSecretFields),
-      QQ_TARGET_TYPE: newConfig.QQ_TARGET_TYPE === 'group' ? 'group' : 'private',
-      QQ_TARGET_ID: (newConfig.QQ_TARGET_ID != null ? String(newConfig.QQ_TARGET_ID) : '').trim(),
+      PUSHPLUS_TOKEN: mergeSecretField(config, newConfig, 'PUSHPLUS_TOKEN', clearSecretFields),
+      PUSHPLUS_TOPIC: (newConfig.PUSHPLUS_TOPIC || '').trim(),
+      PUSHPLUS_QQ_OPTION: (newConfig.PUSHPLUS_QQ_OPTION || '').trim(),
 
       TG_BOT_TOKEN: mergeSecretField(config, newConfig, 'TG_BOT_TOKEN', clearSecretFields),
       TG_CHAT_ID: (newConfig.TG_CHAT_ID != null ? String(newConfig.TG_CHAT_ID) : '').trim(),

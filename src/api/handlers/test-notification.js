@@ -1,9 +1,7 @@
 import { getConfig } from '../../data/config.js';
 import { formatBeijingTime } from '../../core/time.js';
 import { sendWechatBotNotification } from '../../services/notify/wechat.js';
-import { sendWechatAppNotification } from '../../services/notify/wechatapp.js';
-import { sendWxPusherNotification } from '../../services/notify/wxpusher.js';
-import { sendQQNotification } from '../../services/notify/qq.js';
+import { sendPushPlusNotification, sendPushPlusQQNotification } from '../../services/notify/pushplus.js';
 import { telegramChannel } from '../../services/notify/telegram.js';
 import { emailChannel } from '../../services/notify/email.js';
 
@@ -11,13 +9,13 @@ import { emailChannel } from '../../services/notify/email.js';
  * 渠道测试接口
  *
  * POST /api/test-notification
- * body: { type: 'wechatbot' | 'wechatapp' | 'wxpusher' | 'qq' | 'telegram' | 'email', ...该渠道字段 }
+ * body: { type: 'wechatbot' | 'pushplus' | 'pushplusqq' | 'telegram' | 'email', ...该渠道字段 }
  *
  * 前端会把表单里「当前输入但尚未保存」的值一起带上来，因此这里优先用
  * body 里的值，缺失时回落到已保存的配置——这样用户点「测试」不必先保存。
  */
 
-const SUPPORTED = ['wechatbot', 'wechatapp', 'wxpusher', 'qq', 'telegram', 'email'];
+const SUPPORTED = ['wechatbot', 'pushplus', 'pushplusqq', 'telegram', 'email'];
 
 /** 取 body 里的非空字符串，否则回落配置值 */
 function pick(body, config, key) {
@@ -70,51 +68,34 @@ async function handleTestNotification(request, env) {
         testConfig
       );
       message = success ? '企业微信群机器人发送成功' : '发送失败，请检查 Webhook 地址是否完整、机器人是否被移出群';
-    } else if (type === 'wechatapp') {
+    } else if (type === 'pushplus') {
       testConfig = {
         ...config,
-        WECHATAPP_CORP_ID: pick(body, config, 'WECHATAPP_CORP_ID'),
-        WECHATAPP_SECRET: pick(body, config, 'WECHATAPP_SECRET'),
-        WECHATAPP_AGENT_ID: pick(body, config, 'WECHATAPP_AGENT_ID'),
-        WECHATAPP_TO_USER: pick(body, config, 'WECHATAPP_TO_USER')
+        PUSHPLUS_TOKEN: pick(body, config, 'PUSHPLUS_TOKEN'),
+        PUSHPLUS_TOPIC: pick(body, config, 'PUSHPLUS_TOPIC')
       };
-      success = await sendWechatAppNotification(
+      success = await sendPushPlusNotification(
         title,
-        '这是一条测试消息，用于验证「企业微信应用消息」是否配置正确。\n如果你在微信里收到它，说明微信提醒已打通。' + stamp,
+        '这是一条测试消息，用于验证「微信推送」是否配置正确。\n如果你在微信里收到它，说明微信提醒已打通。' + stamp,
         testConfig
       );
-      message = success ? '企业微信应用消息发送成功' : '发送失败，请检查 CorpID / Secret / AgentId / 接收人账号';
-    } else if (type === 'wxpusher') {
+      message = success
+        ? '已提交到 PushPlus，请查看微信「pushplus 推送加」公众号消息'
+        : '发送失败：请检查 token 是否复制完整、是否已关注公众号、账号是否已实名';
+    } else if (type === 'pushplusqq') {
       testConfig = {
         ...config,
-        WXPUSHER_APP_TOKEN: pick(body, config, 'WXPUSHER_APP_TOKEN'),
-        WXPUSHER_UIDS: typeof body.WXPUSHER_UIDS === 'string' ? body.WXPUSHER_UIDS.trim() : config.WXPUSHER_UIDS,
-        WXPUSHER_TOPIC_IDS: typeof body.WXPUSHER_TOPIC_IDS === 'string' ? body.WXPUSHER_TOPIC_IDS.trim() : config.WXPUSHER_TOPIC_IDS
+        PUSHPLUS_TOKEN: pick(body, config, 'PUSHPLUS_TOKEN'),
+        PUSHPLUS_QQ_OPTION: pick(body, config, 'PUSHPLUS_QQ_OPTION')
       };
-      success = await sendWxPusherNotification(
+      success = await sendPushPlusQQNotification(
         title,
-        '这是一条测试消息，用于验证「微信推送」是否配置正确。' + stamp,
+        '这是一条测试消息，用于验证「QQ 机器人」是否配置正确。\n如果你在 QQ 里收到它，说明 QQ 提醒已打通。' + stamp,
         testConfig
       );
-      message = success ? '微信推送发送成功，请查看微信消息' : '发送失败，请检查 AppToken 与 UID';
-    } else if (type === 'qq') {
-      testConfig = {
-        ...config,
-        QQ_ONEBOT_URL: pick(body, config, 'QQ_ONEBOT_URL'),
-        QQ_ONEBOT_TOKEN: pick(body, config, 'QQ_ONEBOT_TOKEN'),
-        QQ_TARGET_TYPE: body.QQ_TARGET_TYPE === 'group' || body.QQ_TARGET_TYPE === 'private'
-          ? body.QQ_TARGET_TYPE
-          : config.QQ_TARGET_TYPE,
-        QQ_TARGET_ID: body.QQ_TARGET_ID != null && String(body.QQ_TARGET_ID).trim().length > 0
-          ? String(body.QQ_TARGET_ID).trim()
-          : config.QQ_TARGET_ID
-      };
-      success = await sendQQNotification(
-        title,
-        '这是一条测试消息，用于验证「QQ 提醒」是否配置正确。' + stamp,
-        testConfig
-      );
-      message = success ? 'QQ 消息发送成功' : '发送失败，请检查 OneBot 地址 / Token / QQ 号或群号';
+      message = success
+        ? '已提交到 PushPlus，请查看 QQ 里机器人发来的消息'
+        : '发送失败：请先在 PushPlus 渠道配置里绑定 QQ 机器人（扫码加好友或填自有机器人 AppID/Secret）';
     } else if (type === 'telegram') {
       testConfig = {
         ...config,
@@ -136,7 +117,7 @@ async function handleTestNotification(request, env) {
     } else if (type === 'email') {
       const provider = ['smtp', 'brevo', 'resend'].includes(String(body.EMAIL_PROVIDER || '').toLowerCase())
         ? String(body.EMAIL_PROVIDER).toLowerCase()
-        : (config.EMAIL_PROVIDER || 'resend');
+        : (config.EMAIL_PROVIDER || 'smtp');
       const rawPort = body.SMTP_PORT != null ? Number(body.SMTP_PORT) : Number(config.SMTP_PORT);
       testConfig = {
         ...config,

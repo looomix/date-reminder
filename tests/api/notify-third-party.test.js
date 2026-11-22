@@ -53,9 +53,8 @@ describe('POST /api/notify/:token', () => {
       JSON.stringify({
         JWT_SECRET: 'k',
         THIRD_PARTY_API_TOKEN: 'good-token',
-        ENABLED_NOTIFIERS: ['wxpusher'],
-        WXPUSHER_APP_TOKEN: 'AT_x',
-        WXPUSHER_UIDS: 'UID_x'
+        ENABLED_NOTIFIERS: ['pushplus'],
+        PUSHPLUS_TOKEN: 'pp-token'
       })
     );
     const res = await app.request(
@@ -76,9 +75,8 @@ describe('POST /api/notify/:token', () => {
       JSON.stringify({
         JWT_SECRET: 'k',
         THIRD_PARTY_API_TOKEN: 'good-token',
-        ENABLED_NOTIFIERS: ['wxpusher'],
-        WXPUSHER_APP_TOKEN: 'AT_x',
-        WXPUSHER_UIDS: 'UID_x'
+        ENABLED_NOTIFIERS: ['pushplus'],
+        PUSHPLUS_TOKEN: 'pp-token'
       })
     );
     const res = await app.request(

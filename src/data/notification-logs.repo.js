@@ -10,7 +10,7 @@
  *     ymdh    = "YYYYMMDDHH"（UTC，方便按时间区间 list）
  *     subId   = 订阅 ID
  *     ruleId  = 触发的规则 ID（手动触发可填 'manual'，第三方 API 可填 'thirdparty'）
- *     channel = 通知渠道（wxpusher, wechatapp, wechatbot, qq）
+ *     channel = 通知渠道（pushplus, pushplusqq, wechatbot, telegram, email）
  *
  *   一条 KV 同时还存储进 metadata 里 ymdhmsRand，避免同小时内重复 key 覆盖。
  *

@@ -10,21 +10,18 @@
  */
 
 import { wecomChannel } from './wechat.js';
-import { wechatAppChannel } from './wechatapp.js';
-import { wxpusherChannel } from './wxpusher.js';
-import { qqChannel } from './qq.js';
+import { pushplusChannel, pushplusQQChannel } from './pushplus.js';
 import { telegramChannel } from './telegram.js';
 import { emailChannel } from './email.js';
 import { writeLog } from '../../data/notification-logs.repo.js';
 
 /** 名字到渠道实例的映射；新增渠道在此注册即可 */
 export const ALL_CHANNELS = {
-  wechatbot: wecomChannel,   // 企业微信群机器人
-  wechatapp: wechatAppChannel, // 企业微信应用消息（可进微信）
-  wxpusher: wxpusherChannel, // 微信推送
-  qq: qqChannel,             // QQ（OneBot）
-  telegram: telegramChannel, // Telegram 机器人
-  email: emailChannel        // 邮件（Resend / Brevo）
+  wechatbot: wecomChannel,       // 企业微信群机器人
+  pushplus: pushplusChannel,     // 微信（PushPlus 公众号）
+  pushplusqq: pushplusQQChannel, // QQ（PushPlus 机器人）
+  telegram: telegramChannel,     // Telegram 机器人
+  email: emailChannel            // 邮件（自有 SMTP / Resend / Brevo）
 };
 
 /**

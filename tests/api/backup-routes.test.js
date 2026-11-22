@@ -24,8 +24,8 @@ async function loginCookie() {
       ADMIN_USERNAME: 'admin',
       ADMIN_PASSWORD: 'password',
       JWT_SECRET: 'test-jwt-secret',
-      WXPUSHER_APP_TOKEN: 'secret-token-value',
-      WXPUSHER_UIDS: 'UID_12345',
+      PUSHPLUS_TOKEN: 'secret-token-value',
+      PUSHPLUS_QQ_OPTION: 'qqgroup-12345',
       TIMEZONE: 'Asia/Shanghai'
     })
   );
@@ -69,10 +69,10 @@ describe('GET /api/backup', () => {
     const backup = await res.json();
     expect(backup.format).toBe('date-reminder-backup');
     expect(backup.includeSecrets).toBe(false);
-    expect(backup.config.WXPUSHER_APP_TOKEN).toBe('');
+    expect(backup.config.PUSHPLUS_TOKEN).toBe('');
     expect(backup.config.JWT_SECRET).toBeUndefined();
     expect(backup.config.ADMIN_PASSWORD).toBeUndefined();
-    expect(backup.config.WXPUSHER_UIDS).toBe('12345');
+    expect(backup.config.PUSHPLUS_QQ_OPTION).toBe('qqgroup-12345');
     expect(backup.subscriptions).toHaveLength(1);
     expect(backup.subscriptions[0].name).toBe('Netflix');
     expect(backup.reminderRules.s1[0].value).toBe(30);
@@ -85,7 +85,7 @@ describe('GET /api/backup', () => {
     expect(res.status).toBe(200);
     const backup = await res.json();
     expect(backup.includeSecrets).toBe(true);
-    expect(backup.config.WXPUSHER_APP_TOKEN).toBe('secret-token-value');
+    expect(backup.config.PUSHPLUS_TOKEN).toBe('secret-token-value');
     expect(backup.config.JWT_SECRET).toBeUndefined();
   });
 });
@@ -103,7 +103,7 @@ describe('POST /api/restore', () => {
     const backup = {
       format: 'date-reminder-backup',
       version: 1,
-      config: { TIMEZONE: 'Asia/Tokyo', WXPUSHER_UIDS: 'UID_999' },
+      config: { TIMEZONE: 'Asia/Tokyo', PUSHPLUS_QQ_OPTION: 'group-999' },
       categories: ['工具'],
       subscriptions: [
         {
@@ -138,9 +138,9 @@ describe('POST /api/restore', () => {
 
     const cfg = await getConfig(env);
     expect(cfg.TIMEZONE).toBe('Asia/Tokyo');
-    expect(cfg.WXPUSHER_UIDS).toBe('999');
+    expect(cfg.PUSHPLUS_QQ_OPTION).toBe('group-999');
     // 未请求 includeSecrets 时不应清空已有 token
-    expect(cfg.WXPUSHER_APP_TOKEN).toBe('secret-token-value');
+    expect(cfg.PUSHPLUS_TOKEN).toBe('secret-token-value');
     expect(cfg.JWT_SECRET).toBe('test-jwt-secret');
   });
 

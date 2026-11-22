@@ -109,88 +109,39 @@
         </div>
         <div class="card-body">
 
-          <!-- 微信推送 -->
-          <div class="channel" data-channel="wxpusher">
+          <!-- 微信推送（PushPlus） -->
+          <div class="channel" data-channel="pushplus">
             <div class="channel-head">
               <div class="channel-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-2.6 6.1A8.5 8.5 0 0112 20a8.6 8.6 0 01-4-1L3 20l1.3-4A8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>
               </div>
               <div class="grow">
-                <div class="channel-name">微信推送 <span class="badge badge-ok ch-state" id="state-wxpusher" style="margin-left:6px;">未配置</span></div>
-                <div class="channel-flow">手机微信直接收消息，无需企业微信 · 最适合家人</div>
+                <div class="channel-name">微信推送 <span class="badge badge-ok ch-state" id="state-pushplus" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">手机微信直接收消息 · 扫码拿 token 长期有效，与下方 QQ 共用一个 token</div>
               </div>
-              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="wxpusher"><span class="track"></span></label>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="pushplus"><span class="track"></span></label>
               <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="channel-body">
               <div class="cfg-grid">
-                <label class="label">AppToken <span class="req">*</span></label>
-                <div class="secret-row">
-                  <input class="input" id="wxpAppToken" placeholder="AT_xxxxxxxx" autocomplete="off">
-                  <button type="button" class="btn btn-sm clear-secret" data-key="WXPUSHER_APP_TOKEN">清除</button>
+                <label class="label">Token <span class="req">*</span></label>
+                <div>
+                  <div class="secret-row">
+                    <input class="input" id="ppToken" placeholder="32 位十六进制串" autocomplete="off">
+                    <button type="button" class="btn btn-sm clear-secret" data-key="PUSHPLUS_TOKEN">清除</button>
+                  </div>
+                  <div class="help">www.pushplus.plus 用微信扫码登录 → 「一对一推送」页复制 token。token 长期有效，不会过期。</div>
                 </div>
 
-                <label class="label">接收人 UID <span class="req">*</span></label>
+                <label class="label">群组编码</label>
                 <div>
-                  <input class="input" id="wxpUids" placeholder="UID_xxxx，多个用英文逗号分隔">
-                  <div class="help">在 wxpusher.com 用微信扫码登录 → 关注应用 → 「我的」里能看到 UID。</div>
-                </div>
-
-                <label class="label">主题 ID</label>
-                <div>
-                  <input class="input" id="wxpTopicIds" placeholder="选填，例如 12345">
-                  <div class="help">想推给一群人时用主题 ID，个人使用留空即可。</div>
+                  <input class="input" id="ppTopic" placeholder="选填，想推给一群人时填">
+                  <div class="help">PushPlus「一对多推送」里创建群组后得到的编码；只发给自己留空即可。</div>
                 </div>
               </div>
               <div class="flex between center mt-16">
-                <div class="xs muted">发到微信「服务通知」里，点开即可阅读。</div>
-                <button class="btn btn-sm" data-test="wxpusher">发送测试</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 企业微信应用 -->
-          <div class="channel" data-channel="wechatapp">
-            <div class="channel-head">
-              <div class="channel-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-              </div>
-              <div class="grow">
-                <div class="channel-name">企业微信应用消息 <span class="badge badge-ok ch-state" id="state-wechatapp" style="margin-left:6px;">未配置</span></div>
-                <div class="channel-flow">成员开通「微信插件」后，消息直接进个人微信</div>
-              </div>
-              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="wechatapp"><span class="track"></span></label>
-              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="channel-body">
-              <div class="cfg-grid">
-                <label class="label">企业 ID（CorpID）<span class="req">*</span></label>
-                <div>
-                  <input class="input" id="wxaCorpId" placeholder="ww1234567890abcdef">
-                  <div class="help">企业微信管理后台 →「我的企业」→ 底部「企业 ID」。</div>
-                </div>
-
-                <label class="label">应用 Secret <span class="req">*</span></label>
-                <div class="secret-row">
-                  <input class="input" id="wxaSecret" placeholder="应用详情里的 Secret" autocomplete="off">
-                  <button type="button" class="btn btn-sm clear-secret" data-key="WECHATAPP_SECRET">清除</button>
-                </div>
-
-                <label class="label">AgentId <span class="req">*</span></label>
-                <div>
-                  <input class="input" id="wxaAgentId" placeholder="1000002">
-                  <div class="help">「应用管理」→ 自建应用 → 详情页顶部的 AgentId（纯数字）。</div>
-                </div>
-
-                <label class="label">接收人账号</label>
-                <div>
-                  <input class="input" id="wxaToUser" placeholder="@all 或 zhangsan|zhangsan,lisi">
-                  <div class="help">填企业微信里的「账号」（不是手机号）。@all 表示应用可见范围内所有人。</div>
-                </div>
-              </div>
-              <div class="flex between center mt-16">
-                <div class="xs muted">需要在企业微信后台把「可信 IP」或「企业可信域名」放通，否则会提示 60020。</div>
-                <button class="btn btn-sm" data-test="wechatapp">发送测试</button>
+                <div class="xs muted">收消息前先关注公众号「pushplus 推送加」，否则发得出去、你收不到。</div>
+                <button class="btn btn-sm" data-test="pushplus">发送测试</button>
               </div>
             </div>
           </div>
@@ -235,45 +186,36 @@
             </div>
           </div>
 
-          <!-- QQ -->
-          <div class="channel" data-channel="qq">
+          <!-- QQ 机器人（PushPlus） -->
+          <div class="channel" data-channel="pushplusqq">
             <div class="channel-head">
               <div class="channel-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 15a4 4 0 007 0"/></svg>
               </div>
               <div class="grow">
-                <div class="channel-name">QQ 提醒 <span class="badge badge-ok ch-state" id="state-qq" style="margin-left:6px;">未配置</span></div>
-                <div class="channel-flow">通过 OneBot 协议发到 QQ 私聊或群</div>
+                <div class="channel-name">QQ 机器人 <span class="badge badge-ok ch-state" id="state-pushplusqq" style="margin-left:6px;">未配置</span></div>
+                <div class="channel-flow">经 PushPlus 绑定 QQ 官方/自有机器人，私聊或群聊收提醒 · 与上方微信共用 token</div>
               </div>
-              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="qq"><span class="track"></span></label>
+              <label class="switch" title="启用该渠道"><input type="checkbox" data-notifier="pushplusqq"><span class="track"></span></label>
               <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="channel-body">
               <div class="cfg-grid">
-                <label class="label">OneBot 地址 <span class="req">*</span></label>
+                <label class="label">Token <span class="req">*</span></label>
                 <div>
-                  <input class="input" id="qqUrl" placeholder="http://1.2.3.4:3000">
-                  <div class="help">NapCat / Lagrange / go-cqhttp 的 HTTP 服务地址（包含端口，不带路径）。必须是公网可访问地址。</div>
+                  <input class="input" id="ppqToken" placeholder="与微信推送相同的 token" autocomplete="off">
+                  <div class="help">和上面「微信推送」填同一个 token（两边填一处即可）。先在 PushPlus「渠道配置 → QQ机器人」里绑定：扫码把机器人加为好友即可；有自己的机器人则填 AppID/AppSecret 绑定。</div>
                 </div>
 
-                <label class="label">Access Token</label>
-                <div class="secret-row">
-                  <input class="input" id="qqToken" placeholder="OneBot 配置里的 access_token，没有可留空" autocomplete="off">
-                  <button type="button" class="btn btn-sm clear-secret" data-key="QQ_ONEBOT_TOKEN">清除</button>
-                </div>
-
-                <label class="label">发送对象</label>
-                <div class="flex gap-8 wrap">
-                  <select class="select" id="qqTargetType" style="width:120px;">
-                    <option value="private">QQ 私聊</option>
-                    <option value="group">QQ 群</option>
-                  </select>
-                  <input class="input" id="qqTargetId" placeholder="QQ 号或群号，多个用逗号分隔" style="flex:1 1 200px;">
+                <label class="label">群配置编码</label>
+                <div>
+                  <input class="input" id="ppqOption" placeholder="选填，发到 QQ 群时填">
+                  <div class="help">PushPlus 渠道配置里新增「QQ群」后得到的编码。填了发到群，不填发给自己（机器人私聊）。</div>
                 </div>
               </div>
               <div class="flex between center mt-16">
-                <div class="xs muted">QQ 渠道需要一个 24 小时在线的 OneBot 服务；没有的话可以只用微信渠道。</div>
-                <button class="btn btn-sm" data-test="qq">发送测试</button>
+                <div class="xs muted">提示：QQ 渠道日限 200 次（实名用户）；实名用户消息只显示标题摘要，点击可看全文。</div>
+                <button class="btn btn-sm" data-test="pushplusqq">发送测试</button>
               </div>
             </div>
           </div>
@@ -681,10 +623,9 @@
 
   function renderStates(cfg) {
     var map = {
-      wxpusher: cfg.WXPUSHER_APP_TOKEN_CONFIGURED && cfg.WXPUSHER_UIDS,
-      wechatapp: cfg.WECHATAPP_CORP_ID && cfg.WECHATAPP_SECRET_CONFIGURED && cfg.WECHATAPP_AGENT_ID,
+      pushplus: cfg.PUSHPLUS_TOKEN_CONFIGURED,
+      pushplusqq: cfg.PUSHPLUS_TOKEN_CONFIGURED,
       wechatbot: cfg.WECHATBOT_WEBHOOK_CONFIGURED,
-      qq: cfg.QQ_ONEBOT_URL && cfg.QQ_TARGET_ID,
       telegram: cfg.TG_BOT_TOKEN_CONFIGURED && cfg.TG_CHAT_ID,
       email: cfg.EMAIL_PROVIDER === 'smtp'
         ? (cfg.SMTP_PASS_CONFIGURED && cfg.SMTP_HOST && cfg.SMTP_USER && cfg.EMAIL_TO)
@@ -713,28 +654,19 @@
       input.checked = enabled.indexOf(input.getAttribute('data-notifier')) !== -1;
     });
 
-    // 微信推送
-    setSecretField('wxpAppToken', cfg, 'WXPUSHER_APP_TOKEN', 'AppToken');
-    $('wxpUids').value = cfg.WXPUSHER_UIDS || '';
-    $('wxpTopicIds').value = cfg.WXPUSHER_TOPIC_IDS || '';
+    // 微信推送（PushPlus）
+    setSecretField('ppToken', cfg, 'PUSHPLUS_TOKEN', 'Token');
+    $('ppTopic').value = cfg.PUSHPLUS_TOPIC || '';
 
-    // 企业微信应用
-    $('wxaCorpId').value = cfg.WECHATAPP_CORP_ID || '';
-    setSecretField('wxaSecret', cfg, 'WECHATAPP_SECRET', 'Secret');
-    $('wxaAgentId').value = cfg.WECHATAPP_AGENT_ID || '';
-    $('wxaToUser').value = cfg.WECHATAPP_TO_USER || '@all';
+    // QQ 机器人（同一个 token，独立输入框便于单独测试）
+    setSecretField('ppqToken', cfg, 'PUSHPLUS_TOKEN', 'Token');
+    $('ppqOption').value = cfg.PUSHPLUS_QQ_OPTION || '';
 
     // 群机器人
     setSecretField('wcWebhook', cfg, 'WECHATBOT_WEBHOOK', 'Webhook');
     $('wcMsgType').value = cfg.WECHATBOT_MSG_TYPE === 'markdown' ? 'markdown' : 'text';
     $('wcAtAll').checked = cfg.WECHATBOT_AT_ALL === 'true';
     $('wcAtMobiles').value = cfg.WECHATBOT_AT_MOBILES || '';
-
-    // QQ
-    $('qqUrl').value = cfg.QQ_ONEBOT_URL || '';
-    setSecretField('qqToken', cfg, 'QQ_ONEBOT_TOKEN', 'Token');
-    $('qqTargetType').value = cfg.QQ_TARGET_TYPE === 'group' ? 'group' : 'private';
-    $('qqTargetId').value = cfg.QQ_TARGET_ID || '';
 
     // Telegram
     setSecretField('tgToken', cfg, 'TG_BOT_TOKEN', 'Token');
@@ -812,24 +744,15 @@
       ADMIN_USERNAME: $('adminUsername').value.trim() || 'admin',
       ENABLED_NOTIFIERS: enabled,
 
-      WXPUSHER_APP_TOKEN: $('wxpAppToken').value.trim(),
-      WXPUSHER_UIDS: $('wxpUids').value.trim(),
-      WXPUSHER_TOPIC_IDS: $('wxpTopicIds').value.trim(),
-
-      WECHATAPP_CORP_ID: $('wxaCorpId').value.trim(),
-      WECHATAPP_SECRET: $('wxaSecret').value.trim(),
-      WECHATAPP_AGENT_ID: $('wxaAgentId').value.trim(),
-      WECHATAPP_TO_USER: $('wxaToUser').value.trim() || '@all',
+      // PushPlus：微信与 QQ 共用一个 token，两个输入框填的是同一个值
+      PUSHPLUS_TOKEN: $('ppToken').value.trim() || $('ppqToken').value.trim(),
+      PUSHPLUS_TOPIC: $('ppTopic').value.trim(),
+      PUSHPLUS_QQ_OPTION: $('ppqOption').value.trim(),
 
       WECHATBOT_WEBHOOK: $('wcWebhook').value.trim(),
       WECHATBOT_MSG_TYPE: $('wcMsgType').value,
       WECHATBOT_AT_ALL: $('wcAtAll').checked ? 'true' : 'false',
       WECHATBOT_AT_MOBILES: $('wcAtMobiles').value.trim(),
-
-      QQ_ONEBOT_URL: $('qqUrl').value.trim(),
-      QQ_ONEBOT_TOKEN: $('qqToken').value.trim(),
-      QQ_TARGET_TYPE: $('qqTargetType').value,
-      QQ_TARGET_ID: $('qqTargetId').value.trim(),
 
       TG_BOT_TOKEN: $('tgToken').value.trim(),
       TG_CHAT_ID: $('tgChatId').value.trim(),
@@ -896,25 +819,17 @@
     btn.textContent = '发送中…';
 
     var body = { type: type };
-    if (type === 'wxpusher') {
-      body.WXPUSHER_APP_TOKEN = $('wxpAppToken').value.trim();
-      body.WXPUSHER_UIDS = $('wxpUids').value.trim();
-      body.WXPUSHER_TOPIC_IDS = $('wxpTopicIds').value.trim();
-    } else if (type === 'wechatapp') {
-      body.WECHATAPP_CORP_ID = $('wxaCorpId').value.trim();
-      body.WECHATAPP_SECRET = $('wxaSecret').value.trim();
-      body.WECHATAPP_AGENT_ID = $('wxaAgentId').value.trim();
-      body.WECHATAPP_TO_USER = $('wxaToUser').value.trim();
+    if (type === 'pushplus') {
+      body.PUSHPLUS_TOKEN = $('ppToken').value.trim() || $('ppqToken').value.trim();
+      body.PUSHPLUS_TOPIC = $('ppTopic').value.trim();
+    } else if (type === 'pushplusqq') {
+      body.PUSHPLUS_TOKEN = $('ppqToken').value.trim() || $('ppToken').value.trim();
+      body.PUSHPLUS_QQ_OPTION = $('ppqOption').value.trim();
     } else if (type === 'wechatbot') {
       body.WECHATBOT_WEBHOOK = $('wcWebhook').value.trim();
       body.WECHATBOT_MSG_TYPE = $('wcMsgType').value;
       body.WECHATBOT_AT_ALL = $('wcAtAll').checked ? 'true' : 'false';
       body.WECHATBOT_AT_MOBILES = $('wcAtMobiles').value.trim();
-    } else if (type === 'qq') {
-      body.QQ_ONEBOT_URL = $('qqUrl').value.trim();
-      body.QQ_ONEBOT_TOKEN = $('qqToken').value.trim();
-      body.QQ_TARGET_TYPE = $('qqTargetType').value;
-      body.QQ_TARGET_ID = $('qqTargetId').value.trim();
     } else if (type === 'telegram') {
       body.TG_BOT_TOKEN = $('tgToken').value.trim();
       body.TG_CHAT_ID = $('tgChatId').value.trim();

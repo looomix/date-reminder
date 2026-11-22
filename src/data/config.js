@@ -3,7 +3,7 @@ import { getKVJson, putKVJson } from './kv.js';
 /**
  * 系统默认配置
  *
- * 只保留本项目实际使用的字段：4 个通知渠道 + 时间/提醒/账号相关设置。
+ * 只保留本项目实际使用的字段：5 个通知渠道 + 时间/提醒/账号相关设置。
  * 所有值都存在 KV 的 `config` 键里，网页「系统设置」页保存。
  */
 const DEFAULT_CONFIG = {
@@ -28,29 +28,17 @@ const DEFAULT_CONFIG = {
   WECHATBOT_AT_MOBILES: '',
   WECHATBOT_AT_ALL: 'false',
 
-  // ② 企业微信应用消息（可经「微信插件」进微信）
-  WECHATAPP_CORP_ID: '',
-  WECHATAPP_SECRET: '',
-  WECHATAPP_AGENT_ID: '',
-  WECHATAPP_TO_USER: '@all',
+  // ② PushPlus（微信 + QQ 共用一个 token）
+  PUSHPLUS_TOKEN: '',     // 微信扫码登录后复制的 token，长期有效
+  PUSHPLUS_TOPIC: '',     // 微信群组编码（可选，不填发给自己）
+  PUSHPLUS_QQ_OPTION: '', // QQ 群/指定机器人配置编码（可选，不填发给自己）
 
-  // ③ 微信推送（WxPusher）
-  WXPUSHER_APP_TOKEN: '',
-  WXPUSHER_UIDS: '',
-  WXPUSHER_TOPIC_IDS: '',
-
-  // ④ QQ（OneBot v11）
-  QQ_ONEBOT_URL: '',
-  QQ_ONEBOT_TOKEN: '',
-  QQ_TARGET_TYPE: 'private',
-  QQ_TARGET_ID: '',
-
-  // ⑤ Telegram 机器人
+  // ③ Telegram 机器人
   TG_BOT_TOKEN: '',
   TG_CHAT_ID: '',
   TG_TOPIC_ID: '',
 
-  // ⑥ 邮件（自己的邮箱 SMTP / Resend / Brevo）
+  // ④ 邮件（自己的邮箱 SMTP / Resend / Brevo）
   EMAIL_PROVIDER: 'smtp',
   EMAIL_API_KEY: '',
   EMAIL_FROM: '',

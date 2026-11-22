@@ -20,9 +20,8 @@ async function loginCookie() {
       ADMIN_USERNAME: 'admin',
       ADMIN_PASSWORD: 'password',
       JWT_SECRET: 'secret-jwt',
-      WXPUSHER_APP_TOKEN: 'wxp-secret',
-      WXPUSHER_UIDS: 'UID_123',
-      QQ_ONEBOT_URL: 'http://127.0.0.1:3000',
+      PUSHPLUS_TOKEN: 'pp-secret-token',
+      PUSHPLUS_QQ_OPTION: 'qqgroup',
       TIMEZONE: 'Asia/Shanghai'
     })
   );
@@ -52,12 +51,11 @@ describe('GET /api/config', () => {
     const res = await app.request('/api/config', { headers: { Cookie: cookie } }, env);
     expect(res.status).toBe(200);
     const cfg = await res.json();
-    expect(cfg.WXPUSHER_APP_TOKEN).toBe('');
-    expect(cfg.WXPUSHER_APP_TOKEN_CONFIGURED).toBe(true);
+    expect(cfg.PUSHPLUS_TOKEN).toBe('');
+    expect(cfg.PUSHPLUS_TOKEN_CONFIGURED).toBe(true);
     expect(cfg.JWT_SECRET).toBeUndefined();
     expect(cfg.ADMIN_PASSWORD).toBeUndefined();
-    expect(cfg.WXPUSHER_UIDS).toBe('UID_123');
-    expect(cfg.QQ_ONEBOT_URL).toBe('http://127.0.0.1:3000');
+    expect(cfg.PUSHPLUS_QQ_OPTION).toBe('qqgroup');
   });
 });
 
@@ -70,20 +68,20 @@ describe('POST /api/config', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
         body: JSON.stringify({
-          WXPUSHER_APP_TOKEN: '',
-          WXPUSHER_UIDS: 'UID_456',
+          PUSHPLUS_TOKEN: '',
+          PUSHPLUS_QQ_OPTION: 'family-group',
           TIMEZONE: 'UTC',
-          ENABLED_NOTIFIERS: ['wxpusher']
+          ENABLED_NOTIFIERS: ['pushplus', 'pushplusqq']
         })
       },
       env
     );
     expect(res.status).toBe(200);
     const stored = await getConfig(env);
-    expect(stored.WXPUSHER_APP_TOKEN).toBe('wxp-secret');
-    expect(stored.WXPUSHER_UIDS).toBe('UID_456');
+    expect(stored.PUSHPLUS_TOKEN).toBe('pp-secret-token');
+    expect(stored.PUSHPLUS_QQ_OPTION).toBe('family-group');
     expect(stored.TIMEZONE).toBe('UTC');
-    expect(stored.ENABLED_NOTIFIERS).toEqual(['wxpusher']);
+    expect(stored.ENABLED_NOTIFIERS).toEqual(['pushplus', 'pushplusqq']);
   });
 
   it('CLEAR_SECRET_FIELDS 可显式清空', async () => {
@@ -94,14 +92,14 @@ describe('POST /api/config', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
         body: JSON.stringify({
-          CLEAR_SECRET_FIELDS: ['WXPUSHER_APP_TOKEN'],
-          WXPUSHER_UIDS: 'UID_123'
+          CLEAR_SECRET_FIELDS: ['PUSHPLUS_TOKEN'],
+          PUSHPLUS_QQ_OPTION: 'qqgroup'
         })
       },
       env
     );
     const stored = await getConfig(env);
-    expect(stored.WXPUSHER_APP_TOKEN).toBe('');
+    expect(stored.PUSHPLUS_TOKEN).toBe('');
   });
 
   it('未知渠道会被过滤掉', async () => {
@@ -111,31 +109,49 @@ describe('POST /api/config', () => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({ ENABLED_NOTIFIERS: ['wechatbot', 'sms', 'qq'] })
+        body: JSON.stringify({ ENABLED_NOTIFIERS: ['wechatbot', 'sms', 'not-a-channel'] })
       },
       env
     );
     const stored = await getConfig(env);
-    expect(stored.ENABLED_NOTIFIERS).toEqual(['wechatbot', 'qq']);
+    expect(stored.ENABLED_NOTIFIERS).toEqual(['wechatbot']);
   });
 });
 
-describe('POST /api/test-notification (微信推送)', () => {
-  it('使用已保存的 AppToken，忽略空输入', async () => {
+describe('POST /api/test-notification (PushPlus)', () => {
+  it('微信渠道：使用已保存的 token，忽略空输入', async () => {
     const cookie = await loginCookie();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ code: 1000, msg: 'ok', data: [] }), { status: 200 })
+      new Response(JSON.stringify({ code: 200, msg: '请求成功', data: 'seq-1' }), { status: 200 })
     );
     const response = await app.request('/api/test-notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: cookie },
-      body: JSON.stringify({ type: 'wxpusher', WXPUSHER_APP_TOKEN: '' })
+      body: JSON.stringify({ type: 'pushplus', PUSHPLUS_TOKEN: '' })
     }, env);
     expect(response.status).toBe(200);
     expect((await response.json()).success).toBe(true);
     const sentBody = JSON.parse(/** @type {any} */ (fetchSpy.mock.calls[0][1]).body);
-    expect(sentBody.appToken).toBe('wxp-secret');
-    expect(sentBody.uids).toEqual(['UID_123']);
+    expect(sentBody.token).toBe('pp-secret-token');
+    expect(sentBody.channel).toBe('wechat');
+  });
+
+  it('QQ 渠道：带 option 群配置编码', async () => {
+    const cookie = await loginCookie();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ code: 200, msg: '请求成功', data: 'seq-2' }), { status: 200 })
+    );
+    const response = await app.request('/api/test-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ type: 'pushplusqq', PUSHPLUS_TOKEN: '' })
+    }, env);
+    expect(response.status).toBe(200);
+    expect((await response.json()).success).toBe(true);
+    const sentBody = JSON.parse(/** @type {any} */ (fetchSpy.mock.calls[0][1]).body);
+    expect(sentBody.token).toBe('pp-secret-token');
+    expect(sentBody.channel).toBe('qq');
+    expect(sentBody.option).toBe('qqgroup');
   });
 
   it('不支持的渠道 → 400', async () => {

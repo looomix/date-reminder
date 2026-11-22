@@ -1,14 +1,12 @@
 // @ts-check
 /**
- * 新增渠道：企业微信应用消息 / 微信推送 / QQ(OneBot)
+ * PushPlus 渠道（微信 + QQ 双渠道）
  *
  * 全部通过 mock fetch 验证请求形状，不真实联网。
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { wechatAppChannel } from '../../../src/services/notify/wechatapp.js';
-import { wxpusherChannel } from '../../../src/services/notify/wxpusher.js';
-import { qqChannel } from '../../../src/services/notify/qq.js';
+import { pushplusChannel, pushplusQQChannel } from '../../../src/services/notify/pushplus.js';
 
 /** @type {Array<{ url: string, body: any, headers: any }>} */
 let calls = [];
@@ -45,158 +43,120 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('企业微信应用消息（可推送到微信）', () => {
+describe('PushPlus 微信渠道（pushplus）', () => {
   const config = {
-    WECHATAPP_CORP_ID: 'ww_test',
-    WECHATAPP_SECRET: 'secret_test',
-    WECHATAPP_AGENT_ID: '1000002',
-    WECHATAPP_TO_USER: 'zhangsan'
+    PUSHPLUS_TOKEN: 'abc123def456abc123def456abc12345',
+    PUSHPLUS_TOPIC: ''
   };
 
-  it('缺配置时报错而不是抛异常', async () => {
-    const r = await wechatAppChannel.send({ title: 't', content: 'c' }, {});
+  it('缺 token 时报错而不是抛异常', async () => {
+    const r = await pushplusChannel.send({ title: 't', content: 'c' }, {});
     expect(r.success).toBe(false);
-    expect(r.error).toContain('WECHATAPP_CORP_ID');
+    expect(r.error).toContain('PUSHPLUS_TOKEN');
   });
 
-  it('先取 access_token，再发 text 消息', async () => {
-    mockFetch((url) =>
-      url.includes('gettoken')
-        ? { body: { errcode: 0, access_token: 'AT', expires_in: 7200 } }
-        : { body: { errcode: 0, errmsg: 'ok' } }
-    );
-
-    const r = await wechatAppChannel.send({ title: '生日提醒', content: '**今天生日**' }, config);
+  it('发给自己：channel=wechat、template=txt、去掉 Markdown 记号', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功', data: '流水号' } }));
+    const r = await pushplusChannel.send({ title: '生日提醒', content: '**今天生日**' }, config);
     expect(r.success).toBe(true);
-    expect(calls[0].url).toContain('/cgi-bin/gettoken');
-    expect(calls[0].url).toContain('corpid=ww_test');
-    expect(calls[1].url).toContain('/cgi-bin/message/send');
-    expect(calls[1].url).toContain('access_token=AT');
-    expect(calls[1].body.touser).toBe('zhangsan');
-    expect(calls[1].body.agentid).toBe(1000002);
-    expect(calls[1].body.msgtype).toBe('text');
-    expect(calls[1].body.text.content).toContain('生日提醒');
-    expect(calls[1].body.text.content).not.toContain('**');
+    expect(calls.length).toBe(1);
+    expect(calls[0].url).toBe('https://www.pushplus.plus/send');
+    expect(calls[0].body.token).toBe(config.PUSHPLUS_TOKEN);
+    expect(calls[0].body.channel).toBe('wechat');
+    expect(calls[0].body.template).toBe('txt');
+    expect(calls[0].body.title).toBe('生日提醒');
+    expect(calls[0].body.content).toContain('今天生日');
+    expect(calls[0].body.content).not.toContain('**');
+    expect(calls[0].body.topic).toBeUndefined();
+    expect(calls[0].body.option).toBeUndefined();
   });
 
-  it('token 在实例内复用，不会每次发送都重新获取', async () => {
-    mockFetch((url) =>
-      url.includes('gettoken')
-        ? { body: { errcode: 0, access_token: 'AT2', expires_in: 7200 } }
-        : { body: { errcode: 0 } }
-    );
-    await wechatAppChannel.send({ title: 'a', content: 'a' }, { ...config, WECHATAPP_SECRET: 's2' });
-    const afterFirst = calls.length;
-    await wechatAppChannel.send({ title: 'b', content: 'b' }, { ...config, WECHATAPP_SECRET: 's2' });
-    expect(calls.length - afterFirst).toBe(1);
-  });
-
-  it('invaliduser 时明确失败（消息其实没送达）', async () => {
-    mockFetch((url) =>
-      url.includes('gettoken')
-        ? { body: { errcode: 0, access_token: 'AT3', expires_in: 7200 } }
-        : { body: { errcode: 0, invaliduser: 'lisi' } }
-    );
-    const r = await wechatAppChannel.send({ title: 't', content: 'c' }, { ...config, WECHATAPP_TO_USER: 'lisi' });
-    expect(r.success).toBe(false);
-    expect(r.error).toContain('invaliduser');
-  });
-
-  it('AgentId 非数字时报错', async () => {
-    mockFetch(() => ({ body: { errcode: 0, access_token: 'AT4', expires_in: 7200 } }));
-    const r = await wechatAppChannel.send({ title: 't', content: 'c' }, { ...config, WECHATAPP_AGENT_ID: 'abc' });
-    expect(r.success).toBe(false);
-    expect(r.error).toContain('AgentId');
-  });
-});
-
-describe('微信推送 WxPusher', () => {
-  it('UID 与 Topic 至少填一个', async () => {
-    const r = await wxpusherChannel.send({ title: 't', content: 'c' }, { WXPUSHER_APP_TOKEN: 'AT' });
-    expect(r.success).toBe(false);
-    expect(r.error).toMatch(/UID|TOPIC/);
-  });
-
-  it('正常发送并按类型整理 uids / topicIds', async () => {
-    mockFetch(() => ({ body: { code: 1000, msg: '处理成功', data: [{ uid: 'UID_a' }] } }));
-    const r = await wxpusherChannel.send(
-      { title: '生日提醒', content: '正文' },
-      { WXPUSHER_APP_TOKEN: 'AT_x', WXPUSHER_UIDS: 'UID_a, UID_b', WXPUSHER_TOPIC_IDS: '12' }
-    );
-    expect(r.success).toBe(true);
-    expect(calls[0].body.uids).toEqual(['UID_a', 'UID_b']);
-    expect(calls[0].body.topicIds).toEqual([12]);
-    expect(calls[0].body.appToken).toBe('AT_x');
-  });
-
-  it('code 非 1000 视为失败', async () => {
-    mockFetch(() => ({ body: { code: 1002, msg: 'appToken错误', data: [] } }));
-    const r = await wxpusherChannel.send({ title: 't', content: 'c' }, { WXPUSHER_APP_TOKEN: 'bad', WXPUSHER_UIDS: 'U' });
-    expect(r.success).toBe(false);
-    expect(r.error).toContain('1002');
-  });
-});
-
-describe('QQ（OneBot v11）', () => {
-  const base = {
-    QQ_ONEBOT_URL: 'http://127.0.0.1:3000/',
-    QQ_ONEBOT_TOKEN: 'tok',
-    QQ_TARGET_TYPE: 'group',
-    QQ_TARGET_ID: '123456'
-  };
-
-  it('缺地址/目标时报错', async () => {
-    expect((await qqChannel.send({ title: 't', content: 'c' }, {})).success).toBe(false);
-    expect((await qqChannel.send({ title: 't', content: 'c' }, { QQ_ONEBOT_URL: 'http://h' })).success).toBe(false);
-  });
-
-  it('群聊：URL 去尾斜杠，带 Bearer token', async () => {
-    mockFetch(() => ({ body: { status: 'ok', retcode: 0 } }));
-    const r = await qqChannel.send({ title: '标题', content: '**正文**' }, base);
-    expect(r.success).toBe(true);
-    expect(calls[0].url).toBe('http://127.0.0.1:3000/send_group_msg');
-    expect(calls[0].headers.Authorization).toBe('Bearer tok');
-    expect(calls[0].body.group_id).toBe(123456);
-    expect(calls[0].body.message).toBe('标题\n\n正文');
-  });
-
-  it('私聊：走 send_private_msg', async () => {
-    mockFetch(() => ({ body: { status: 'ok', retcode: 0 } }));
-    const r = await qqChannel.send(
+  it('填了群组编码时带 topic', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    await pushplusChannel.send(
       { title: 't', content: 'c' },
-      { ...base, QQ_TARGET_TYPE: 'private', QQ_TARGET_ID: '42' }
+      { ...config, PUSHPLUS_TOPIC: 'family' }
     );
-    expect(r.success).toBe(true);
-    expect(calls[0].url).toContain('/send_private_msg');
-    expect(calls[0].body.user_id).toBe(42);
+    expect(calls[0].body.topic).toBe('family');
   });
 
-  it('多目标逐个发送，任一成功即算成功', async () => {
-    mockFetch(() => ({ body: { status: 'ok', retcode: 0 } }));
-    const r = await qqChannel.send({ title: 't', content: 'c' }, { ...base, QQ_TARGET_ID: '1, 2, 3' });
-    expect(r.success).toBe(true);
-    expect(calls).toHaveLength(3);
-  });
-
-  it('401 时用 access_token 重试', async () => {
-    let first = true;
-    mockFetch(() => {
-      if (first) {
-        first = false;
-        return { status: 401, body: { message: 'unauthorized' } };
-      }
-      return { body: { status: 'ok', retcode: 0 } };
-    });
-    const r = await qqChannel.send({ title: 't', content: 'c' }, base);
-    expect(r.success).toBe(true);
-    expect(calls).toHaveLength(2);
-    expect(calls[1].body.access_token).toBe('tok');
-  });
-
-  it('retcode 非 0 时报错信息可读', async () => {
-    mockFetch(() => ({ body: { status: 'failed', retcode: 100, wording: '群不存在' } }));
-    const r = await qqChannel.send({ title: 't', content: 'c' }, base);
+  it('code=903 时提示 token 无效', async () => {
+    mockFetch(() => ({ body: { code: 903, msg: 'token无效' } }));
+    const r = await pushplusChannel.send({ title: 't', content: 'c' }, config);
     expect(r.success).toBe(false);
-    expect(r.error).toContain('群不存在');
+    expect(r.error).toContain('903');
+    expect(r.error).toContain('token 无效');
+  });
+
+  it('code=905 时提示先实名', async () => {
+    mockFetch(() => ({ body: { code: 905, msg: '未实名' } }));
+    const r = await pushplusChannel.send({ title: 't', content: 'c' }, config);
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('实名');
+  });
+
+  it('HTTP 非 200 报错并带响应体', async () => {
+    mockFetch(() => ({ status: 502, body: { code: 500, msg: 'bad gateway' } }));
+    const r = await pushplusChannel.send({ title: 't', content: 'c' }, config);
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('502');
+  });
+
+  it('test() 走同一个发送路径', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    const r = await pushplusChannel.test(config);
+    expect(r.success).toBe(true);
+    expect(r.channel).toBe('pushplus');
+    expect(calls[0].body.title).toContain('测试');
+  });
+});
+
+describe('PushPlus QQ 渠道（pushplusqq）', () => {
+  const config = {
+    PUSHPLUS_TOKEN: 'abc123def456abc123def456abc12345',
+    PUSHPLUS_QQ_OPTION: ''
+  };
+
+  it('缺 token 时报错', async () => {
+    const r = await pushplusQQChannel.send({ title: 't', content: 'c' }, {});
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('PUSHPLUS_TOKEN');
+  });
+
+  it('发给自己：channel=qq、不带 option/topic', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    const r = await pushplusQQChannel.send({ title: '生日提醒', content: '妈妈明天生日' }, config);
+    expect(r.success).toBe(true);
+    expect(calls[0].body.channel).toBe('qq');
+    expect(calls[0].body.template).toBe('txt');
+    expect(calls[0].body.token).toBe(config.PUSHPLUS_TOKEN);
+    expect(calls[0].body.option).toBeUndefined();
+    expect(calls[0].body.topic).toBeUndefined();
+  });
+
+  it('填了群配置编码时带 option（发到 QQ 群）', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    await pushplusQQChannel.send(
+      { title: 't', content: 'c' },
+      { ...config, PUSHPLUS_QQ_OPTION: 'qqgroup' }
+    );
+    expect(calls[0].body.option).toBe('qqgroup');
+  });
+
+  it('两个渠道共用同一 token 但互不影响', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    const r1 = await pushplusChannel.send({ title: 'a', content: 'a' }, config);
+    const r2 = await pushplusQQChannel.send({ title: 'b', content: 'b' }, config);
+    expect(r1.success).toBe(true);
+    expect(r2.success).toBe(true);
+    expect(calls[0].body.channel).toBe('wechat');
+    expect(calls[1].body.channel).toBe('qq');
+  });
+
+  it('test() 的渠道名是 pushplusqq', async () => {
+    mockFetch(() => ({ body: { code: 200, msg: '请求成功' } }));
+    const r = await pushplusQQChannel.test(config);
+    expect(r.success).toBe(true);
+    expect(r.channel).toBe('pushplusqq');
   });
 });

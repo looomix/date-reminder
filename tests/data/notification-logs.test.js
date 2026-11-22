@@ -25,7 +25,7 @@ describe('notification-logs.repo', () => {
     await writeLog(env, {
       subId: 's1',
       ruleId: 'r1',
-      channel: 'wxpusher',
+      channel: 'pushplus',
       status: 'success',
       title: '到期提醒',
       content: '到期前 7 天'
@@ -33,7 +33,7 @@ describe('notification-logs.repo', () => {
     const logs = await query(env, {});
     expect(logs).toHaveLength(1);
     expect(logs[0].subId).toBe('s1');
-    expect(logs[0].channel).toBe('wxpusher');
+    expect(logs[0].channel).toBe('pushplus');
     expect(logs[0].status).toBe('success');
   });
 
@@ -46,15 +46,15 @@ describe('notification-logs.repo', () => {
 
   it('query 按 status 过滤', async () => {
     await writeLog(env, { subId: 's1', channel: 'tg', status: 'success' });
-    await writeLog(env, { subId: 's1', channel: 'qq', status: 'failed', error: 'http 400' });
+    await writeLog(env, { subId: 's1', channel: 'pushplusqq', status: 'failed', error: 'http 400' });
     expect((await query(env, { status: 'failed' }))).toHaveLength(1);
     expect((await query(env, { status: 'success' }))).toHaveLength(1);
   });
 
   it('query 按 channel 过滤', async () => {
-    await writeLog(env, { subId: 's1', channel: 'wxpusher', status: 'success' });
-    await writeLog(env, { subId: 's1', channel: 'qq', status: 'success' });
-    expect((await query(env, { channel: 'qq' }))).toHaveLength(1);
+    await writeLog(env, { subId: 's1', channel: 'pushplus', status: 'success' });
+    await writeLog(env, { subId: 's1', channel: 'pushplusqq', status: 'success' });
+    expect((await query(env, { channel: 'pushplusqq' }))).toHaveLength(1);
   });
 
   it('query 按 since/until 时间区间过滤', async () => {
